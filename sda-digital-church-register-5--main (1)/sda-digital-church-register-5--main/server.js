@@ -29,6 +29,9 @@ class SQLitePool {
   initDatabase() {
     console.log("Initializing SQLite database...");
     try {
+      // Disable FK enforcement during schema init so seed data loads safely
+      this.db.exec('PRAGMA foreign_keys = OFF;');
+
       if (fs.existsSync('init.sql')) {
         let sql = fs.readFileSync('init.sql', 'utf8');
         // Convert MySQL to SQLite DDL
@@ -55,8 +58,13 @@ class SQLitePool {
       } else {
         console.warn("init.sql not found, starting with empty SQLite database.");
       }
+
+      // Re-enable FK enforcement for runtime operations
+      this.db.exec('PRAGMA foreign_keys = ON;');
     } catch (e) {
       console.error("Failed to initialize SQLite database:", e);
+      // Make sure FK is on even after error
+      try { this.db.exec('PRAGMA foreign_keys = ON;'); } catch (_) {}
     }
   }
 
@@ -579,6 +587,12 @@ app.post('/api/classes', async (req, res) => {
     const classId = id || `class_${Date.now()}`;
     const classTeacherId = typeof teacherId === 'string' ? teacherId : '';
     const classLanguage = typeof language === 'string' && language.trim() ? language.trim() : 'English';
+
+    // Ensure the church row exists before inserting (avoids FK constraint error in SQLite)
+    await pool.query(
+      `INSERT OR IGNORE INTO churches (id, church_name, status, districtId, conferenceId) VALUES (?, ?, 'approved', 'dist_001', 'conf_001')`,
+      [churchId, churchId]
+    );
 
     await pool.query(
       'INSERT INTO classes (id, name, teacherId, language, churchId) VALUES (?, ?, ?, ?, ?)',
@@ -1123,10 +1137,17 @@ app.post('/api/sync', async (req, res) => {
     } = req.body;
     const churchId = getChurchId(req);
 
+    // Ensure church row exists (prevents FK constraint errors in SQLite fallback)
+    await connection.query(
+      `INSERT OR IGNORE INTO churches (id, church_name, status, districtId, conferenceId) VALUES (?, ?, 'approved', 'dist_001', 'conf_001')`,
+      [churchId, churchId]
+    );
+
     await connection.beginTransaction();
 
     // 1️⃣ Sync Users
     await connection.query('DELETE FROM users WHERE churchId = ?', [churchId]);
+
 
     const allUsers = [...admins, ...teachers].filter(u => u.id && u.name); // skip null/undefined
     if (allUsers.length > 0) {
@@ -1717,6 +1738,12 @@ app.post('/api/users/create-teacher', async (req, res) => {
 
     if (!name || !email || !assignedClass) {
       return res.status(400).json({ error: 'Missing required details' });
+    }
+
+    // Check for duplicate email before attempting insert
+    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email.toLowerCase().trim()]);
+    if (existing.length > 0) {
+      return res.status(409).json({ error: 'A user with this email address already exists. Please use a different email.' });
     }
 
     const tempPass = `tmp_${Math.random().toString(36).slice(2, 7)}`;
