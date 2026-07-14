@@ -113,7 +113,11 @@ class SQLitePool {
         this.db.exec('COMMIT');
       },
       rollback: async () => {
-        this.db.exec('ROLLBACK');
+        try {
+          this.db.exec('ROLLBACK');
+        } catch (e) {
+          // Ignore rollback errors if transaction was already aborted or not active
+        }
       },
       release: () => {}
     };
