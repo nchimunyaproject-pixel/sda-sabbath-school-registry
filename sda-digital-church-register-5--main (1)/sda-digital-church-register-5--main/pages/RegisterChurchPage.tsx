@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Church, MapPin, Mail, Phone, User, Users, ChevronRight, CheckCircle2, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Church, MapPin, Mail, Phone, User, Users, ChevronRight, CheckCircle2, AlertTriangle, ArrowLeft, Lock, Eye, EyeOff } from 'lucide-react';
 import SDALogo from '../components/SDALogo.tsx';
 
 interface RegisterChurchPageProps {
@@ -28,6 +28,9 @@ const RegisterChurchPage: React.FC<RegisterChurchPageProps> = ({
   const [phoneNumber, setPhoneNumber] = useState('');
   const [clerkName, setClerkName] = useState('');
   const [clerkEmail, setClerkEmail] = useState('');
+  const [clerkPassword, setClerkPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const [pastorName, setPastorName] = useState('');
   const [membership, setMembership] = useState(0);
 
@@ -35,8 +38,18 @@ const RegisterChurchPage: React.FC<RegisterChurchPageProps> = ({
     e.preventDefault();
     setError('');
 
-    if (!churchName.trim() || !province.trim() || !location.trim() || !email.trim() || !phoneNumber.trim() || !clerkName.trim() || !clerkEmail.trim()) {
+    if (!churchName.trim() || !province.trim() || !location.trim() || !email.trim() || !phoneNumber.trim() || !clerkName.trim() || !clerkEmail.trim() || !clerkPassword) {
       setError('Please fill in all required fields.');
+      return;
+    }
+
+    if (clerkPassword.length < 6) {
+      setError('Clerk password must be at least 6 characters.');
+      return;
+    }
+
+    if (clerkPassword !== confirmPassword) {
+      setError('Passwords do not match.');
       return;
     }
 
@@ -52,6 +65,7 @@ const RegisterChurchPage: React.FC<RegisterChurchPageProps> = ({
       phone_number: phoneNumber.trim(),
       clerkName: clerkName.trim(),
       clerkEmail: clerkEmail.trim().toLowerCase(),
+      clerkPassword: clerkPassword,
       pastor_name: pastorName.trim() || null,
       membership: Number(membership) || 0,
       status: 'pending',
@@ -247,6 +261,44 @@ const RegisterChurchPage: React.FC<RegisterChurchPageProps> = ({
                       value={clerkEmail}
                       onChange={e => setClerkEmail(e.target.value)}
                       placeholder="e.g. clerk@church.com"
+                      required
+                      className="w-full bg-blue-950/60 border border-blue-700/50 text-white placeholder-blue-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-amber-500 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-blue-200 text-xs font-black uppercase tracking-widest mb-1.5">Clerk Password *</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      value={clerkPassword}
+                      onChange={e => setClerkPassword(e.target.value)}
+                      placeholder="Min. 6 characters"
+                      required
+                      minLength={6}
+                      className="w-full bg-blue-950/60 border border-blue-700/50 text-white placeholder-blue-500 rounded-xl pl-10 pr-12 py-3 text-sm focus:outline-none focus:border-amber-500 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass(!showPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 hover:text-white transition-colors"
+                    >
+                      {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-blue-200 text-xs font-black uppercase tracking-widest mb-1.5">Confirm Password *</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
                       required
                       className="w-full bg-blue-950/60 border border-blue-700/50 text-white placeholder-blue-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-amber-500 transition-colors"
                     />

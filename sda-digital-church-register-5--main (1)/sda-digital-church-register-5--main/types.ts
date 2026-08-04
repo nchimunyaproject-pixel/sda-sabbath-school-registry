@@ -30,12 +30,26 @@ export interface Church {
   phone_number: string;
   clerkName: string;
   clerkEmail: string;
+  clerkPassword?: string;
   pastor_name?: string;
   membership: number;
   status: 'pending' | 'approved';
   is_active: boolean;
   created_at?: string;
 }
+
+export interface PendingDistrictRegistration {
+  id: string;
+  districtName: string;
+  conferenceId: string;
+  adminName: string;
+  adminEmail: string;
+  phone_number?: string;
+  password?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at?: string;
+}
+
 
 export interface User {
   id: string;
@@ -51,6 +65,7 @@ export interface User {
   conferenceId?: string;
   is_first_login?: boolean;
   temp_password?: string;
+  is_active?: boolean;
 }
 
 export interface Student {

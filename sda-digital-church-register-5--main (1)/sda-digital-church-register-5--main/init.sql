@@ -61,12 +61,26 @@ CREATE TABLE IF NOT EXISTS `churches` (
   `phone_number` VARCHAR(50) NOT NULL,
   `clerkName` VARCHAR(100) NOT NULL,
   `clerkEmail` VARCHAR(100) NOT NULL,
+  `clerkPassword` VARCHAR(255) DEFAULT NULL,
   `pastor_name` VARCHAR(100) DEFAULT NULL,
   `membership` INT DEFAULT 0,
   `status` ENUM('pending', 'approved') NOT NULL DEFAULT 'pending',
   `is_active` BOOLEAN DEFAULT TRUE,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`districtId`) REFERENCES `districts`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Pending District Registrations
+CREATE TABLE IF NOT EXISTS `pending_district_registrations` (
+  `id` VARCHAR(50) NOT NULL PRIMARY KEY,
+  `districtName` VARCHAR(100) NOT NULL,
+  `conferenceId` VARCHAR(50) NOT NULL,
+  `adminName` VARCHAR(100) NOT NULL,
+  `adminEmail` VARCHAR(100) NOT NULL,
+  `phone_number` VARCHAR(50) DEFAULT NULL,
+  `password` VARCHAR(255) NOT NULL,
+  `status` VARCHAR(20) DEFAULT 'pending',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================

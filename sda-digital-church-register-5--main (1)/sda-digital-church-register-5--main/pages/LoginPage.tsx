@@ -311,15 +311,27 @@ const LoginPage: React.FC<LoginPageProps> = ({
 
         {/* Links to Registration */}
         <div className="text-center mt-6 space-y-2">
-          <p className="text-blue-400 text-xs">
-            Want to register a new church?{' '}
-            <button
-              onClick={() => navigate('/register-church')}
-              className="text-amber-400 font-black hover:text-amber-300 transition-colors bg-transparent border-0 p-0 cursor-pointer"
-            >
-              Register Church
-            </button>
-          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-xs text-blue-300">
+            <p>
+              Register a Church?{' '}
+              <button
+                onClick={() => navigate('/register-church')}
+                className="text-amber-400 font-black hover:text-amber-300 transition-colors bg-transparent border-0 p-0 cursor-pointer underline underline-offset-2"
+              >
+                Register Church
+              </button>
+            </p>
+            <span className="hidden sm:inline text-blue-600">•</span>
+            <p>
+              District Admin?{' '}
+              <button
+                onClick={() => navigate('/register-district')}
+                className="text-amber-400 font-black hover:text-amber-300 transition-colors bg-transparent border-0 p-0 cursor-pointer underline underline-offset-2"
+              >
+                Register District
+              </button>
+            </p>
+          </div>
         </div>
       </div>
 

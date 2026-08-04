@@ -1346,6 +1346,7 @@ app.post('/api/churches/register', async (req, res) => {
       phone_number,
       clerkName,
       clerkEmail,
+      clerkPassword,
       pastor_name,
       membership
     } = req.body;
@@ -1368,8 +1369,8 @@ app.post('/api/churches/register', async (req, res) => {
 
     await pool.query(`
       INSERT INTO churches 
-      (id, church_name, districtId, province, location, email, phone_number, clerkName, clerkEmail, pastor_name, membership, status, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', true)
+      (id, church_name, districtId, province, location, email, phone_number, clerkName, clerkEmail, clerkPassword, pastor_name, membership, status, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', true)
     `, [
       id || `church_${Date.now()}`,
       church_name,
@@ -1380,6 +1381,7 @@ app.post('/api/churches/register', async (req, res) => {
       phone_number,
       clerkName,
       clerkEmail,
+      clerkPassword || null,
       pastor_name || null,
       membership || 0
     ]);
@@ -1429,13 +1431,14 @@ app.post('/api/admin/churches/:id/approve', async (req, res) => {
 
     // Create a default Clerk user account
     const clerkId = `clerk_${Date.now()}`;
-    const tempPass = `welcome_${Math.random().toString(36).slice(2, 7)}`;
-    const hashed = await bcrypt.hash(tempPass, 10);
+    const userPass = church.clerkPassword || `welcome_${Math.random().toString(36).slice(2, 7)}`;
+    const isFirstLogin = !church.clerkPassword;
+    const hashed = await bcrypt.hash(userPass, 10);
 
     await connection.query(`
       INSERT INTO users 
       (id, name, email, password, role, churchName, churchId, districtId, conferenceId, is_first_login, temp_password)
-      VALUES (?, ?, ?, ?, 'CLERK', ?, ?, ?, 'conf_001', true, ?)
+      VALUES (?, ?, ?, ?, 'CLERK', ?, ?, ?, 'conf_001', ?, ?)
     `, [
       clerkId,
       church.clerkName,
@@ -1444,7 +1447,8 @@ app.post('/api/admin/churches/:id/approve', async (req, res) => {
       church.church_name,
       church.id,
       church.districtId,
-      tempPass
+      isFirstLogin,
+      isFirstLogin ? userPass : null
     ]);
 
     // Seed default current offerings row for this church
@@ -1463,21 +1467,213 @@ app.post('/api/admin/churches/:id/approve', async (req, res) => {
           from: process.env.EMAIL_FROM || process.env.GMAIL_USER,
           to: church.clerkEmail,
           subject: 'SDA Registry – Church Approved!',
-          text: `Your church "${church.church_name}" has been approved!\n\nTemporary Login Credentials:\nEmail: ${church.clerkEmail}\nPassword: ${tempPass}\n\nYou will be prompted to change your password on first login.`,
-          html: `<h3>Church Approved!</h3><p>Your church <strong>${church.church_name}</strong> is now active.</p><p><strong>Clerk Login Credentials:</strong><br/>Email: ${church.clerkEmail}<br/>Temporary Password: <code>${tempPass}</code></p><p>Please log in and update your password.</p>`
+          text: `Your church "${church.church_name}" has been approved!\n\nLogin Credentials:\nEmail: ${church.clerkEmail}\nPassword: ${userPass}\n\n`,
+          html: `<h3>Church Approved!</h3><p>Your church <strong>${church.church_name}</strong> is now active.</p><p><strong>Clerk Login Credentials:</strong><br/>Email: ${church.clerkEmail}<br/>Password: <code>${userPass}</code></p>`
         });
       } catch (e) {
         console.error('Failed to send registration approved email:', e);
       }
     }
 
-    res.json({ success: true, tempPass });
+    res.json({ success: true, tempPass: userPass });
   } catch (err) {
     await connection.rollback();
     console.error('Approve church error:', err);
     res.status(500).json({ error: 'Failed to approve church registration' });
   } finally {
     connection.release();
+  }
+});
+
+/* ============================================
+   DISTRICT PUBLIC REGISTRATION & APPROVALS
+============================================ */
+
+// Public District Admin Registration
+app.post('/api/districts/register', async (req, res) => {
+  try {
+    const { id, districtName, conferenceId, adminName, adminEmail, phone_number, password } = req.body;
+
+    if (!districtName || !conferenceId || !adminName || !adminEmail || !password) {
+      return res.status(400).json({ error: 'Missing required registration details' });
+    }
+
+    // Ensure table exists in SQLite/MySQL fallback
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS pending_district_registrations (
+        id VARCHAR(50) PRIMARY KEY,
+        districtName VARCHAR(100) NOT NULL,
+        conferenceId VARCHAR(50) NOT NULL,
+        adminName VARCHAR(100) NOT NULL,
+        adminEmail VARCHAR(100) NOT NULL,
+        phone_number VARCHAR(50),
+        password VARCHAR(255) NOT NULL,
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Check if admin email exists
+    const [existingUser] = await pool.query('SELECT id FROM users WHERE email = ?', [adminEmail.toLowerCase().trim()]);
+    if (existingUser.length) {
+      return res.status(409).json({ error: 'An account with this email address already exists.' });
+    }
+
+    const regId = id || `dist_reg_${Date.now()}`;
+    await pool.query(`
+      INSERT INTO pending_district_registrations
+      (id, districtName, conferenceId, adminName, adminEmail, phone_number, password, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
+    `, [regId, districtName, conferenceId, adminName, adminEmail.toLowerCase().trim(), phone_number || null, password]);
+
+    res.status(201).json({ success: true });
+  } catch (err) {
+    console.error('District registration error:', err);
+    res.status(500).json({ error: 'Failed to submit district registration' });
+  }
+});
+
+// Fetch pending district admin registrations (for Conference Admin)
+app.get('/api/admin/districts/pending', async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS pending_district_registrations (
+        id VARCHAR(50) PRIMARY KEY,
+        districtName VARCHAR(100) NOT NULL,
+        conferenceId VARCHAR(50) NOT NULL,
+        adminName VARCHAR(100) NOT NULL,
+        adminEmail VARCHAR(100) NOT NULL,
+        phone_number VARCHAR(50),
+        password VARCHAR(255) NOT NULL,
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    const [pending] = await pool.query("SELECT * FROM pending_district_registrations WHERE status = 'pending'");
+    res.json(pending);
+  } catch (err) {
+    console.error('Fetch pending district registrations error:', err);
+    res.status(500).json({ error: 'Failed to fetch pending district registrations' });
+  }
+});
+
+// Approve pending district registration
+app.post('/api/admin/districts/:id/approve-registration', async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const { id } = req.params;
+    await connection.beginTransaction();
+
+    const [registrations] = await connection.query('SELECT * FROM pending_district_registrations WHERE id = ?', [id]);
+    if (!registrations.length) {
+      await connection.rollback();
+      return res.status(404).json({ error: 'District registration request not found' });
+    }
+
+    const reg = registrations[0];
+
+    // Check if district exists or create it
+    let targetDistrictId = '';
+    const [existingDistricts] = await connection.query('SELECT id FROM districts WHERE name = ? AND conferenceId = ?', [reg.districtName, reg.conferenceId]);
+    if (existingDistricts.length) {
+      targetDistrictId = existingDistricts[0].id;
+      await connection.query('UPDATE districts SET is_active = true WHERE id = ?', [targetDistrictId]);
+    } else {
+      targetDistrictId = `dist_${Date.now()}`;
+      await connection.query('INSERT INTO districts (id, name, conferenceId, is_active) VALUES (?, ?, ?, true)', [
+        targetDistrictId,
+        reg.districtName,
+        reg.conferenceId
+      ]);
+    }
+
+    // Create District Admin User account
+    const hashed = await bcrypt.hash(reg.password, 10);
+    const userId = `dist_admin_${Date.now()}`;
+    await connection.query(`
+      INSERT INTO users
+      (id, name, email, password, role, districtId, conferenceId, is_first_login, is_active)
+      VALUES (?, ?, ?, ?, 'DISTRICT_ADMIN', ?, ?, false, true)
+    `, [
+      userId,
+      reg.adminName,
+      reg.adminEmail.toLowerCase().trim(),
+      hashed,
+      targetDistrictId,
+      reg.conferenceId
+    ]);
+
+    await connection.query("UPDATE pending_district_registrations SET status = 'approved' WHERE id = ?", [id]);
+    await connection.commit();
+
+    res.json({ success: true, districtId: targetDistrictId, userId });
+  } catch (err) {
+    await connection.rollback();
+    console.error('Approve district registration error:', err);
+    res.status(500).json({ error: 'Failed to approve district registration' });
+  } finally {
+    connection.release();
+  }
+});
+
+/* ============================================
+   USER PROFILE & TRANSITION OF POWER UPDATE
+============================================ */
+
+app.put('/api/users/:id/admin-update', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, password, role, assignedClass, churchId, districtId, conferenceId, is_active } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ error: 'Name and email are required' });
+    }
+
+    // Build update dynamic fields
+    let sql = `UPDATE users SET name = ?, email = ?`;
+    let params = [name, email.toLowerCase().trim()];
+
+    if (role) {
+      sql += `, role = ?`;
+      params.push(role);
+    }
+    if (assignedClass !== undefined) {
+      sql += `, assignedClass = ?`;
+      params.push(assignedClass || null);
+    }
+    if (churchId !== undefined) {
+      sql += `, churchId = ?`;
+      params.push(churchId || null);
+    }
+    if (districtId !== undefined) {
+      sql += `, districtId = ?`;
+      params.push(districtId || null);
+    }
+    if (conferenceId !== undefined) {
+      sql += `, conferenceId = ?`;
+      params.push(conferenceId || null);
+    }
+    if (is_active !== undefined) {
+      sql += `, is_active = ?`;
+      params.push(is_active ? 1 : 0);
+    }
+    if (password && password.trim().length >= 6) {
+      const hashed = await bcrypt.hash(password.trim(), 10);
+      sql += `, password = ?, temp_password = NULL, is_first_login = false`;
+      params.push(hashed);
+    }
+
+    sql += ` WHERE id = ?`;
+    params.push(id);
+
+    await pool.query(sql, params);
+
+    // Fetch updated user object
+    const [rows] = await pool.query('SELECT id, name, email, role, assignedClass, language, churchName, churchId, districtId, conferenceId, is_active FROM users WHERE id = ?', [id]);
+    res.json(rows[0] || { success: true });
+  } catch (err) {
+    console.error('Admin update user error:', err);
+    res.status(500).json({ error: 'Failed to update user profile' });
   }
 });
 
@@ -1877,6 +2073,233 @@ app.get('/api/admin/stats', async (req, res) => {
   }
 });
 
+
+
+/* ============================
+   DISTRICT REGISTRATION ENDPOINTS
+============================ */
+
+// Public: list conferences
+app.get('/api/public/conferences', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT id, name FROM conferences WHERE is_active = true');
+    if (!rows.length) return res.json([{ id: 'conf_001', name: 'Southern Africa Indian Ocean Division' }]);
+    res.json(rows);
+  } catch (err) {
+    res.json([{ id: 'conf_001', name: 'Southern Africa Indian Ocean Division' }]);
+  }
+});
+
+// Public: list districts (so new admins can choose their district)
+app.get('/api/public/districts', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT id, name, conferenceId FROM districts WHERE is_active = true ORDER BY name');
+    res.json(rows);
+  } catch (err) {
+    console.error('Public districts error:', err);
+    res.status(500).json({ error: 'Failed to fetch districts' });
+  }
+});
+
+// Submit a district admin registration request
+app.post('/api/district-registrations', async (req, res) => {
+  try {
+    const { districtName, districtId, conferenceId, adminName, adminEmail, phone_number, password } = req.body;
+
+    if (!districtName || !conferenceId || !adminName || !adminEmail) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Check if email already registered
+    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [adminEmail]);
+    if (existing.length) {
+      return res.status(409).json({ error: 'Email already registered. Please use a different email.' });
+    }
+
+    // Check for duplicate pending request
+    const [dupeReq] = await pool.query(
+      "SELECT id FROM district_registrations WHERE adminEmail = ? AND status = 'pending'",
+      [adminEmail]
+    );
+    if (dupeReq.length) {
+      return res.status(409).json({ error: 'You already have a pending registration request.' });
+    }
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS district_registrations (
+        id VARCHAR(50) PRIMARY KEY,
+        districtName VARCHAR(100) NOT NULL,
+        districtId VARCHAR(50),
+        conferenceId VARCHAR(50) NOT NULL,
+        adminName VARCHAR(100) NOT NULL,
+        adminEmail VARCHAR(100) NOT NULL,
+        phone_number VARCHAR(50),
+        password VARCHAR(255),
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
+
+    await pool.query(`
+      INSERT INTO district_registrations
+      (id, districtName, districtId, conferenceId, adminName, adminEmail, phone_number, password, status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
+    `, [
+      `dreg_${Date.now()}`,
+      districtName,
+      districtId || null,
+      conferenceId,
+      adminName,
+      adminEmail.toLowerCase(),
+      phone_number || null,
+      hashedPassword
+    ]);
+
+    res.status(201).json({ success: true });
+  } catch (err) {
+    console.error('District registration error:', err);
+    res.status(500).json({ error: 'Failed to submit registration' });
+  }
+});
+
+// Admin: get pending district registrations
+app.get('/api/admin/district-registrations/pending', async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS district_registrations (
+        id VARCHAR(50) PRIMARY KEY,
+        districtName VARCHAR(100) NOT NULL,
+        districtId VARCHAR(50),
+        conferenceId VARCHAR(50) NOT NULL,
+        adminName VARCHAR(100) NOT NULL,
+        adminEmail VARCHAR(100) NOT NULL,
+        phone_number VARCHAR(50),
+        password VARCHAR(255),
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    const [rows] = await pool.query(
+      "SELECT * FROM district_registrations WHERE status = 'pending' ORDER BY created_at DESC"
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Pending district regs error:', err);
+    res.status(500).json({ error: 'Failed to fetch pending registrations' });
+  }
+});
+
+// Admin: approve district registration
+app.post('/api/admin/district-registrations/:id/approve', async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const { id } = req.params;
+    await connection.beginTransaction();
+
+    const [regs] = await connection.query('SELECT * FROM district_registrations WHERE id = ?', [id]);
+    if (!regs.length) {
+      await connection.rollback();
+      return res.status(404).json({ error: 'Registration not found' });
+    }
+
+    const reg = regs[0];
+    const bcrypt = require('bcryptjs');
+
+    // If registering a new district, create it first
+    let targetDistrictId = reg.districtId;
+    if (!targetDistrictId) {
+      targetDistrictId = `dist_${Date.now()}`;
+      await connection.query(
+        'INSERT INTO districts (id, name, conferenceId, is_active) VALUES (?, ?, ?, true)',
+        [targetDistrictId, reg.districtName, reg.conferenceId]
+      );
+    }
+
+    // Generate temp password if none provided
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let tempPass = '';
+    for (let i = 0; i < 8; i++) tempPass += chars[Math.floor(Math.random() * chars.length)];
+
+    const passwordHash = reg.password || await bcrypt.hash(tempPass, 10);
+    const userId = `user_${Date.now()}`;
+
+    // Create the district admin user
+    await connection.query(`
+      INSERT INTO users (id, name, email, password, role, districtId, conferenceId, is_first_login, is_active)
+      VALUES (?, ?, ?, ?, 'DISTRICT_ADMIN', ?, ?, ?, true)
+    `, [
+      userId,
+      reg.adminName,
+      reg.adminEmail,
+      passwordHash,
+      targetDistrictId,
+      reg.conferenceId,
+      !reg.password  // is_first_login = true only if they didn't set their own password
+    ]);
+
+    // Mark registration as approved
+    await connection.query(
+      "UPDATE district_registrations SET status = 'approved' WHERE id = ?",
+      [id]
+    );
+
+    await connection.commit();
+    res.json({ success: true, tempPass: reg.password ? null : tempPass, userId });
+  } catch (err) {
+    await connection.rollback();
+    console.error('Approve district reg error:', err);
+    res.status(500).json({ error: 'Failed to approve district registration' });
+  } finally {
+    connection.release();
+  }
+});
+
+/* ============================
+   ADMIN USER UPDATE ENDPOINT
+============================ */
+app.put('/api/admin/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, password, is_active } = req.body;
+
+    const [existing] = await pool.query('SELECT id FROM users WHERE id = ?', [id]);
+    if (!existing.length) return res.status(404).json({ error: 'User not found' });
+
+    // Check email uniqueness (if changing email)
+    if (email) {
+      const [emailCheck] = await pool.query('SELECT id FROM users WHERE email = ? AND id != ?', [email, id]);
+      if (emailCheck.length) return res.status(409).json({ error: 'Email already in use by another account' });
+    }
+
+    const updates = [];
+    const params = [];
+
+    if (name) { updates.push('name = ?'); params.push(name); }
+    if (email) { updates.push('email = ?'); params.push(email.toLowerCase()); }
+    if (is_active !== undefined) { updates.push('is_active = ?'); params.push(is_active ? 1 : 0); }
+
+    if (password) {
+      const bcrypt = require('bcryptjs');
+      const hashed = await bcrypt.hash(password, 10);
+      updates.push('password = ?');
+      updates.push('is_first_login = false');
+      params.push(hashed);
+    }
+
+    if (updates.length > 0) {
+      params.push(id);
+      await pool.query(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, params);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Admin user update error:', err);
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
 
 /* ============================
    SERVER START

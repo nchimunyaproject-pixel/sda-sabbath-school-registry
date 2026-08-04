@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Role, User, Class, Announcement, AttendanceRecord, Student, Offerings, District, Church, Notification } from './types.ts';
+import { Role, User, Class, Announcement, AttendanceRecord, Student, Offerings, District, Church, Notification, PendingDistrictRegistration } from './types.ts';
 import { INITIAL_TEACHERS, INITIAL_CLASSES } from './constants.ts';
 import LoginPage from './pages/LoginPage.tsx';
 import SignupPage from './pages/SignupPage.tsx';
@@ -9,6 +9,7 @@ import TeacherDashboard from './pages/TeacherDashboard.tsx';
 import ResetPasswordPage from './pages/ResetPasswordPage.tsx';
 import GuestListPage from './pages/GuestListPage.tsx';
 import RegisterChurchPage from './pages/RegisterChurchPage.tsx';
+import RegisterDistrictPage from './pages/RegisterDistrictPage.tsx';
 import ConferenceDashboard from './pages/ConferenceDashboard.tsx';
 import DistrictDashboard from './pages/DistrictDashboard.tsx';
 import Navigation from './components/Navigation.tsx';
@@ -46,6 +47,7 @@ const App: React.FC = () => {
   });
   const [districts, setDistricts] = useState<District[]>([]);
   const [churches, setChurches] = useState<Church[]>([]);
+  const [pendingDistrictRegs, setPendingDistrictRegs] = useState<PendingDistrictRegistration[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
@@ -132,6 +134,16 @@ const App: React.FC = () => {
             const allChurches = districtsData.flatMap((d: any) => d.churches || []);
             setChurches(allChurches);
           }
+
+          // Load pending district registrations
+          try {
+            const distRegRes = await fetch(`${BACKEND_URL}/admin/district-registrations/pending`, {
+              headers: withChurchHeader()
+            });
+            if (distRegRes.ok) {
+              setPendingDistrictRegs(await distRegRes.json());
+            }
+          } catch (e) { /* ignore if endpoint not yet deployed */ }
 
           // Load offerings from database
           const offeringsResponse = await fetch(`${BACKEND_URL}/offerings`, {
@@ -427,6 +439,61 @@ const App: React.FC = () => {
     } else {
       setChurches(prev => prev.map(c => c.id === id ? { ...c, status: 'approved' } : c));
       alert(`Church approved! Clerk account created locally.`);
+    }
+  };
+
+  const handleApproveDistrictReg = async (id: string) => {
+    if (isBackendConnected) {
+      try {
+        const response = await fetch(`${BACKEND_URL}/admin/district-registrations/${id}/approve`, {
+          method: 'POST',
+          headers: withChurchHeader()
+        });
+        if (response.ok) {
+          const data = await response.json();
+          alert(`District Admin approved! Temporary password: ${data.tempPass || 'See email'}`);
+          setPendingDistrictRegs(prev => prev.filter(r => r.id !== id));
+          // Refresh districts and users
+          const distRes = await fetch(`${BACKEND_URL}/admin/districts`, { headers: withChurchHeader() });
+          if (distRes.ok) { const d = await distRes.json(); setDistricts(d); }
+          const usersRes = await fetch(`${BACKEND_URL}/users`, { headers: withChurchHeader() });
+          if (usersRes.ok) { const u = await usersRes.json(); setTeachers(u.filter((x: User) => x.role === Role.TEACHER)); }
+        }
+      } catch (err) {
+        console.error('Failed to approve district registration:', err);
+      }
+    } else {
+      setPendingDistrictRegs(prev => prev.filter(r => r.id !== id));
+    }
+  };
+
+  const handleAdminUpdateUser = async (userId: string, data: Partial<User> & { password?: string }) => {
+    if (isBackendConnected) {
+      try {
+        const response = await fetch(`${BACKEND_URL}/admin/users/${userId}`, {
+          method: 'PUT',
+          headers: withChurchHeader({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(data)
+        });
+        if (response.ok) {
+          // If updating current user, refresh session
+          if (userId === currentUser?.id) {
+            const updated = { ...currentUser, name: data.name ?? currentUser.name, email: data.email ?? currentUser.email };
+            setCurrentUser(updated);
+            localStorage.setItem('sda_current_user', JSON.stringify(updated));
+          }
+          // Refresh user list
+          const usersRes = await fetch(`${BACKEND_URL}/users`, { headers: withChurchHeader() });
+          if (usersRes.ok) {
+            const u = await usersRes.json();
+            setTeachers(u.filter((x: User) => x.role === Role.TEACHER || x.role === Role.CLERK || x.role === Role.DISTRICT_ADMIN));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to update user:', err);
+      }
+    } else {
+      setTeachers(prev => prev.map(t => t.id === userId ? { ...t, ...data } : t));
     }
   };
 
@@ -953,6 +1020,7 @@ const App: React.FC = () => {
             ) : <Navigate to="/" />} />
             <Route path="/reset/:token" element={<ResetPasswordPage />} />
             <Route path="/register-church" element={<RegisterChurchPage isBackendConnected={isBackendConnected} districts={districts} onSubmitRegistration={handleRegisterChurch} />} />
+            <Route path="/register-district" element={<RegisterDistrictPage isBackendConnected={isBackendConnected} backendUrl={BACKEND_URL} />} />
             <Route
               path="/guest-list"
               element={
@@ -977,10 +1045,13 @@ const App: React.FC = () => {
                     teachers={teachers}
                     attendanceRecords={attendanceRecords}
                     announcements={announcements}
+                    pendingDistrictRegs={pendingDistrictRegs}
                     onCreateDistrict={handleCreateDistrict}
                     onUpdateDistrict={handleUpdateDistrict}
                     onApproveChurch={handleApproveChurch}
+                    onApproveDistrictReg={handleApproveDistrictReg}
                     onPublishAnnouncement={handlePublishAnnouncement}
+                    onAdminUpdateUser={handleAdminUpdateUser}
                     onLogout={handleLogout}
                   />
                 ) : currentUser.role === Role.DISTRICT_ADMIN ? (

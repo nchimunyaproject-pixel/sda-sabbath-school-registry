@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
-import { Users, BookOpen, Bell, Calendar, DollarSign, Plus, Trash2, Edit3, CheckCircle, XCircle, ChevronDown, ChevronRight, LayoutDashboard, Send, MapPin, Eye, FileText, Settings, ShieldCheck, ToggleLeft, ToggleRight, Search } from 'lucide-react';
-import { User, Class, Announcement, AttendanceRecord, Offerings, District, Church, Role } from '../types.ts';
+import { Users, BookOpen, Bell, Calendar, DollarSign, Plus, Trash2, Edit3, CheckCircle, XCircle, ChevronDown, ChevronRight, LayoutDashboard, Send, MapPin, Eye, FileText, Settings, ShieldCheck, ToggleLeft, ToggleRight, Search, Lock, UserCheck, X, Save } from 'lucide-react';
+import { User, Class, Announcement, AttendanceRecord, Offerings, District, Church, Role, PendingDistrictRegistration } from '../types.ts';
 
 interface ConferenceDashboardProps {
   user: User;
@@ -10,10 +10,13 @@ interface ConferenceDashboardProps {
   teachers: User[];
   attendanceRecords: AttendanceRecord[];
   announcements: Announcement[];
+  pendingDistrictRegs: PendingDistrictRegistration[];
   onCreateDistrict: (name: string) => void;
   onUpdateDistrict: (id: string, name: string, is_active: boolean) => void;
   onApproveChurch: (id: string) => void;
+  onApproveDistrictReg: (id: string) => void;
   onPublishAnnouncement: (announcementData: any) => void;
+  onAdminUpdateUser: (userId: string, data: Partial<User> & { password?: string }) => void;
   onLogout: () => void;
 }
 
@@ -24,13 +27,76 @@ const ConferenceDashboard: React.FC<ConferenceDashboardProps> = ({
   teachers,
   attendanceRecords,
   announcements,
+  pendingDistrictRegs,
   onCreateDistrict,
   onUpdateDistrict,
   onApproveChurch,
+  onApproveDistrictReg,
   onPublishAnnouncement,
+  onAdminUpdateUser,
   onLogout
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'districts' | 'churches' | 'approvals' | 'announcements'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'districts' | 'churches' | 'approvals' | 'announcements' | 'users'>('overview');
+
+  // User Management States
+  const [userSearch, setUserSearch] = useState('');
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [editIsActive, setEditIsActive] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  const [approvalSubTab, setApprovalSubTab] = useState<'churches' | 'districts'>('churches');
+
+  // My Profile States
+  const [profileName, setProfileName] = useState(user.name);
+  const [profileEmail, setProfileEmail] = useState(user.email);
+  const [profilePassword, setProfilePassword] = useState('');
+  const [profileSaved, setProfileSaved] = useState(false);
+
+  const allUsers = useMemo(() => [...teachers].filter(u => u.id !== user.id), [teachers, user.id]);
+
+  const filteredUsers = useMemo(() => {
+    if (!userSearch.trim()) return allUsers;
+    const s = userSearch.toLowerCase();
+    return allUsers.filter(u =>
+      u.name.toLowerCase().includes(s) ||
+      u.email.toLowerCase().includes(s) ||
+      u.role.toLowerCase().includes(s)
+    );
+  }, [allUsers, userSearch]);
+
+  const openEditModal = (u: User) => {
+    setEditingUser(u);
+    setEditName(u.name);
+    setEditEmail(u.email);
+    setEditPassword('');
+    setEditIsActive(u.is_active !== false);
+    setShowEditModal(true);
+  };
+
+  const handleSaveUserEdit = () => {
+    if (!editingUser) return;
+    onAdminUpdateUser(editingUser.id, {
+      name: editName,
+      email: editEmail,
+      password: editPassword || undefined,
+      is_active: editIsActive
+    });
+    setShowEditModal(false);
+    setEditingUser(null);
+  };
+
+  const handleSaveProfile = () => {
+    onAdminUpdateUser(user.id, {
+      name: profileName,
+      email: profileEmail,
+      password: profilePassword || undefined
+    });
+    setProfileSaved(true);
+    setTimeout(() => setProfileSaved(false), 3000);
+  };
   
   // District Management States
   const [newDistrictName, setNewDistrictName] = useState('');
@@ -176,15 +242,16 @@ const ConferenceDashboard: React.FC<ConferenceDashboardProps> = ({
           { id: 'overview', label: 'Union Overview', icon: LayoutDashboard },
           { id: 'districts', label: 'Districts Manager', icon: Settings },
           { id: 'churches', label: 'Church Discovery', icon: Search },
-          { id: 'approvals', label: `Pending Approvals (${pendingChurches.length})`, icon: ShieldCheck },
-          { id: 'announcements', label: 'Hierarchical Bulletins', icon: Bell }
+          { id: 'approvals', label: `Approvals (${pendingChurches.length + pendingDistrictRegs.length})`, icon: ShieldCheck },
+          { id: 'announcements', label: 'Bulletins', icon: Bell },
+          { id: 'users', label: 'User Management', icon: UserCheck }
         ].map(tab => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-5 py-3 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+              className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
                 activeTab === tab.id
                   ? 'bg-blue-950 text-white shadow-md'
                   : 'text-slate-600 hover:bg-slate-100'
@@ -435,44 +502,99 @@ const ConferenceDashboard: React.FC<ConferenceDashboardProps> = ({
         <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
           <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
             <ShieldCheck className="text-amber-500" />
-            Church Registration Approvals Queue
+            Registration Approvals Queue
           </h3>
-          <div className="space-y-4">
-            {pendingChurches.map(c => (
-              <div key={c.id} className="p-5 border border-slate-200 rounded-2xl bg-slate-50/50 flex flex-col md:flex-row justify-between gap-6">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded">Pending Approval</span>
-                    <h4 className="font-bold text-lg text-slate-900">{c.church_name}</h4>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 text-xs text-slate-600">
-                    <p><strong>District:</strong> {districts.find(d => d.id === c.districtId)?.name || 'Unknown'}</p>
-                    <p><strong>Province:</strong> {c.province}</p>
-                    <p><strong>Location:</strong> {c.location}</p>
-                    <p><strong>Contact:</strong> {c.phone_number} / {c.email}</p>
-                    <p><strong>Clerk:</strong> {c.clerkName} ({c.clerkEmail})</p>
-                    <p><strong>Pastor:</strong> {c.pastor_name || 'N/A'}</p>
-                    <p><strong>Membership Estimate:</strong> {c.membership}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => onApproveChurch(c.id)}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1.5"
-                  >
-                    <CheckCircle className="w-4 h-4" /> Approve Registration
-                  </button>
-                </div>
-              </div>
-            ))}
-            {pendingChurches.length === 0 && (
-              <div className="text-center py-16 text-slate-400">
-                <div className="text-5xl mb-4">🎉</div>
-                <h4 className="font-bold text-slate-700">Approval Queue is Clear</h4>
-                <p className="text-xs">No pending church registrations require action.</p>
-              </div>
-            )}
+          {/* Sub-tab toggle */}
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setApprovalSubTab('churches')}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${approvalSubTab === 'churches' ? 'bg-blue-950 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+            >
+              ⛪ Churches ({pendingChurches.length})
+            </button>
+            <button
+              onClick={() => setApprovalSubTab('districts')}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${approvalSubTab === 'districts' ? 'bg-blue-950 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+            >
+              🏛️ District Admins ({pendingDistrictRegs.length})
+            </button>
           </div>
+
+          {/* Church Approvals */}
+          {approvalSubTab === 'churches' && (
+            <div className="space-y-4">
+              {pendingChurches.map(c => (
+                <div key={c.id} className="p-5 border border-slate-200 rounded-2xl bg-slate-50/50 flex flex-col md:flex-row justify-between gap-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded">Pending</span>
+                      <h4 className="font-bold text-lg text-slate-900">{c.church_name}</h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 text-xs text-slate-600">
+                      <p><strong>District:</strong> {districts.find(d => d.id === c.districtId)?.name || 'Unknown'}</p>
+                      <p><strong>Province:</strong> {c.province}</p>
+                      <p><strong>Location:</strong> {c.location}</p>
+                      <p><strong>Contact:</strong> {c.phone_number} / {c.email}</p>
+                      <p><strong>Clerk:</strong> {c.clerkName} ({c.clerkEmail})</p>
+                      <p><strong>Password Set:</strong> {c.clerkPassword ? '✅ Custom Password' : '⚠️ Auto-generated'}</p>
+                      <p><strong>Pastor:</strong> {c.pastor_name || 'N/A'}</p>
+                      <p><strong>Membership Estimate:</strong> {c.membership}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onApproveChurch(c.id)}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1.5"
+                    >
+                      <CheckCircle className="w-4 h-4" /> Approve
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {pendingChurches.length === 0 && (
+                <div className="text-center py-12 text-slate-400">
+                  <div className="text-5xl mb-4">🎉</div>
+                  <h4 className="font-bold text-slate-700">No Pending Church Registrations</h4>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* District Admin Approvals */}
+          {approvalSubTab === 'districts' && (
+            <div className="space-y-4">
+              {pendingDistrictRegs.map(r => (
+                <div key={r.id} className="p-5 border border-slate-200 rounded-2xl bg-slate-50/50 flex flex-col md:flex-row justify-between gap-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-purple-100 text-purple-800 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded">District Admin Request</span>
+                      <h4 className="font-bold text-lg text-slate-900">{r.districtName}</h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 text-xs text-slate-600">
+                      <p><strong>Admin Name:</strong> {r.adminName}</p>
+                      <p><strong>Admin Email:</strong> {r.adminEmail}</p>
+                      <p><strong>Phone:</strong> {r.phone_number || 'N/A'}</p>
+                      <p><strong>Conference:</strong> {r.conferenceId}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onApproveDistrictReg(r.id)}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1.5"
+                    >
+                      <CheckCircle className="w-4 h-4" /> Approve District
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {pendingDistrictRegs.length === 0 && (
+                <div className="text-center py-12 text-slate-400">
+                  <div className="text-5xl mb-4">✅</div>
+                  <h4 className="font-bold text-slate-700">No Pending District Registrations</h4>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -602,6 +724,146 @@ const ConferenceDashboard: React.FC<ConferenceDashboardProps> = ({
               {announcements.length === 0 && (
                 <p className="text-slate-400 text-sm italic text-center py-12">No announcements in history.</p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. USER MANAGEMENT TAB */}
+      {activeTab === 'users' && (
+        <div className="space-y-8">
+          {/* My Profile Card */}
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+            <h3 className="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
+              <UserCheck className="text-amber-500" /> My Profile (Transition of Power)
+            </h3>
+            <p className="text-slate-500 text-xs mb-4">Update your own account details here. Use this section when handing over Conference Admin credentials to a new administrator.</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-slate-500 text-xs font-bold mb-1">Full Name</label>
+                <input type="text" value={profileName} onChange={e => setProfileName(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500" />
+              </div>
+              <div>
+                <label className="block text-slate-500 text-xs font-bold mb-1">Email Address</label>
+                <input type="email" value={profileEmail} onChange={e => setProfileEmail(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500" />
+              </div>
+              <div>
+                <label className="block text-slate-500 text-xs font-bold mb-1">New Password (leave blank to keep current)</label>
+                <input type="password" value={profilePassword} onChange={e => setProfilePassword(e.target.value)}
+                  placeholder="Enter new password..."
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500" />
+              </div>
+            </div>
+            <button onClick={handleSaveProfile}
+              className="mt-4 bg-blue-950 hover:bg-blue-900 text-white font-bold px-6 py-2.5 rounded-xl text-sm flex items-center gap-2">
+              <Save className="w-4 h-4" /> {profileSaved ? '✅ Saved!' : 'Save Profile'}
+            </button>
+          </div>
+
+          {/* All Users Table */}
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <h3 className="text-lg font-black text-slate-800">All Users — Transition of Power</h3>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input type="text" value={userSearch} onChange={e => setUserSearch(e.target.value)}
+                  placeholder="Search by name, email, or role..."
+                  className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500 w-64" />
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100">
+                    <th className="text-left py-3 px-3 text-slate-500 font-bold text-xs uppercase">Name</th>
+                    <th className="text-left py-3 px-3 text-slate-500 font-bold text-xs uppercase">Email</th>
+                    <th className="text-left py-3 px-3 text-slate-500 font-bold text-xs uppercase">Role</th>
+                    <th className="text-left py-3 px-3 text-slate-500 font-bold text-xs uppercase">Status</th>
+                    <th className="text-right py-3 px-3 text-slate-500 font-bold text-xs uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filteredUsers.map(u => (
+                    <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-3 px-3 font-semibold text-slate-800">{u.name}</td>
+                      <td className="py-3 px-3 text-slate-500">{u.email}</td>
+                      <td className="py-3 px-3">
+                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                          u.role === 'DISTRICT_ADMIN' ? 'bg-purple-100 text-purple-800' :
+                          u.role === 'CLERK' ? 'bg-blue-100 text-blue-800' :
+                          u.role === 'TEACHER' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
+                        }`}>{u.role}</span>
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                          u.is_active !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
+                        }`}>{u.is_active !== false ? 'Active' : 'Inactive'}</span>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <button onClick={() => openEditModal(u)}
+                          className="bg-blue-950 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-blue-800 flex items-center gap-1 ml-auto">
+                          <Edit3 className="w-3 h-3" /> Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredUsers.length === 0 && (
+                    <tr><td colSpan={5} className="text-center py-8 text-slate-400 text-xs italic">No users found.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditModal && editingUser && (
+        <div className="fixed inset-0 bg-blue-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-black text-slate-900">Edit User — {editingUser.name}</h3>
+              <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-700"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-slate-500 text-xs font-bold mb-1">Full Name *</label>
+                <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500" />
+              </div>
+              <div>
+                <label className="block text-slate-500 text-xs font-bold mb-1">Email Address *</label>
+                <input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500" />
+              </div>
+              <div>
+                <label className="block text-slate-500 text-xs font-bold mb-1">New Password (leave blank to keep current)</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input type="password" value={editPassword} onChange={e => setEditPassword(e.target.value)}
+                    placeholder="Enter new password..."
+                    className="w-full border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:border-blue-500" />
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setEditIsActive(!editIsActive)}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${editIsActive ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${editIsActive ? 'left-7' : 'left-1'}`} />
+                </button>
+                <span className="text-sm font-semibold text-slate-700">{editIsActive ? 'Account Active' : 'Account Inactive'}</span>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setShowEditModal(false)}
+                className="flex-1 border border-slate-200 text-slate-600 font-bold py-2.5 rounded-xl text-sm hover:bg-slate-50">
+                Cancel
+              </button>
+              <button onClick={handleSaveUserEdit}
+                className="flex-1 bg-blue-950 text-white font-bold py-2.5 rounded-xl text-sm hover:bg-blue-900 flex items-center justify-center gap-2">
+                <Save className="w-4 h-4" /> Save Changes
+              </button>
             </div>
           </div>
         </div>
