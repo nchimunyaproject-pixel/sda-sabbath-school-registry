@@ -195,12 +195,12 @@ const App: React.FC = () => {
             setClasses(parsed.classes || INITIAL_CLASSES);
             setAnnouncements(parsed.announcements || []);
             setAttendanceRecords(parsed.attendanceRecords || []);
-            setOfferings(parsed.offerings || {
-              weeklyMission: 0,
-              thirteenthSabbath: 0,
-              birthdayThank: 0,
-              investmentFund: 0
-            });
+            setDistricts(parsed.districts && parsed.districts.length > 0 ? parsed.districts : [
+              { id: 'dist_001', name: 'Lusaka Central District', conferenceId: 'conf_001', is_active: true },
+              { id: 'dist_002', name: 'Copperbelt North District', conferenceId: 'conf_001', is_active: true }
+            ]);
+            setChurches(parsed.churches || []);
+            setPendingDistrictRegs(parsed.pendingDistrictRegs || []);
           } catch (e) {
             console.error("Local data parse error");
             setAdmins([]);
@@ -212,6 +212,12 @@ const App: React.FC = () => {
               birthdayThank: 0,
               investmentFund: 0
             });
+            setDistricts([
+              { id: 'dist_001', name: 'Lusaka Central District', conferenceId: 'conf_001', is_active: true },
+              { id: 'dist_002', name: 'Copperbelt North District', conferenceId: 'conf_001', is_active: true }
+            ]);
+            setChurches([]);
+            setPendingDistrictRegs([]);
           }
         } else {
           setAdmins([]);
@@ -223,6 +229,12 @@ const App: React.FC = () => {
             birthdayThank: 0,
             investmentFund: 0
           });
+          setDistricts([
+            { id: 'dist_001', name: 'Lusaka Central District', conferenceId: 'conf_001', is_active: true },
+            { id: 'dist_002', name: 'Copperbelt North District', conferenceId: 'conf_001', is_active: true }
+          ]);
+          setChurches([]);
+          setPendingDistrictRegs([]);
         }
       }
       
@@ -260,10 +272,31 @@ const App: React.FC = () => {
       classes,
       announcements,
       attendanceRecords,
-      offerings
+      offerings,
+      districts,
+      churches,
+      pendingDistrictRegs
     };
     localStorage.setItem('sda_registry_full_data', JSON.stringify(dataToSync));
-  }, [admins, teachers, classes, announcements, attendanceRecords, offerings, isLoading]);
+  }, [admins, teachers, classes, announcements, attendanceRecords, offerings, districts, churches, pendingDistrictRegs, isLoading]);
+
+  // Sync across browser tabs in local mode
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'sda_registry_full_data' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed.districts) setDistricts(parsed.districts);
+          if (parsed.churches) setChurches(parsed.churches);
+          if (parsed.pendingDistrictRegs) setPendingDistrictRegs(parsed.pendingDistrictRegs);
+          if (parsed.teachers) setTeachers(parsed.teachers);
+          if (parsed.classes) setClasses(parsed.classes);
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Sync Data Effect (backend)
   useEffect(() => {
