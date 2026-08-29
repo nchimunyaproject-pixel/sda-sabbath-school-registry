@@ -344,15 +344,40 @@ const LoginPage: React.FC<LoginPageProps> = ({
   };
 
   const fallbackLocalLogin = (emailClean: string) => {
+    let extraClerks: User[] = [];
+    const savedData = localStorage.getItem('sda_registry_full_data');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        if (parsed.churches && Array.isArray(parsed.churches)) {
+          extraClerks = parsed.churches
+            .filter((c: any) => c.status === 'approved' && c.clerkEmail)
+            .map((c: any) => ({
+              id: `clerk_${c.id}`,
+              name: c.clerkName || 'Church Clerk',
+              email: (c.clerkEmail || '').toLowerCase().trim(),
+              password: c.clerkPassword || 'password123',
+              role: Role.CLERK,
+              churchName: c.church_name,
+              churchId: c.id,
+              districtId: c.districtId,
+              conferenceId: 'conf_001',
+              is_active: true
+            }));
+        }
+      } catch (e) {}
+    }
+
     const allLocalUsers = [
       ...admins,
+      ...extraClerks,
       ...teachers,
       { id: 'conf_admin_001', name: 'Elder Mutale', email: 'conference@church.com', password: 'password123', role: Role.CONFERENCE_ADMIN },
       { id: 'dist_admin_001', name: 'Pastor Phiri', email: 'district@church.com', password: 'password123', role: Role.DISTRICT_ADMIN, districtId: 'dist_001' }
     ];
 
     const match = allLocalUsers.find(
-      u => u.email?.toLowerCase() === emailClean && u.password === password
+      u => u.email?.toLowerCase().trim() === emailClean && u.password === password
     );
 
     if (match) {

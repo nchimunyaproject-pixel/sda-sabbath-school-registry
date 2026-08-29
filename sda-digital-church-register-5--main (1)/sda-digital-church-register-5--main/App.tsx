@@ -470,8 +470,24 @@ const App: React.FC = () => {
         console.error('Failed to approve church:', err);
       }
     } else {
+      const churchToApprove = churches.find(c => c.id === id);
       setChurches(prev => prev.map(c => c.id === id ? { ...c, status: 'approved' } : c));
-      alert(`Church approved! Clerk account created locally.`);
+      if (churchToApprove) {
+        const newClerk: User = {
+          id: `clerk_${churchToApprove.id || Date.now()}`,
+          name: churchToApprove.clerkName || 'Church Clerk',
+          email: churchToApprove.clerkEmail.toLowerCase().trim(),
+          password: churchToApprove.clerkPassword || 'password123',
+          role: Role.CLERK,
+          churchName: churchToApprove.church_name,
+          churchId: churchToApprove.id,
+          districtId: churchToApprove.districtId,
+          conferenceId: 'conf_001',
+          is_active: true
+        };
+        setAdmins(prev => [...prev.filter(a => a.email.toLowerCase() !== newClerk.email), newClerk]);
+      }
+      alert(`Church approved! Clerk account is now active and can log in.`);
     }
   };
 
