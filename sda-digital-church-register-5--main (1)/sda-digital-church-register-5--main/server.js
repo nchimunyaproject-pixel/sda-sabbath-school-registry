@@ -602,7 +602,7 @@ app.post('/api/classes', async (req, res) => {
 
     // Ensure the church row exists before inserting (avoids FK constraint error in SQLite)
     await pool.query(
-      `INSERT OR IGNORE INTO churches (id, church_name, status, districtId, conferenceId) VALUES (?, ?, 'approved', 'dist_001', 'conf_001')`,
+      `INSERT OR IGNORE INTO churches (id, church_name, status, districtId, province, location, email, phone_number, clerkName, clerkEmail) VALUES (?, ?, 'approved', 'dist_001', 'Lusaka', 'Main St', 'church@sda.org', '+260000000', 'Clerk', 'clerk@church.com')`,
       [churchId, churchId]
     );
 
@@ -1151,7 +1151,7 @@ app.post('/api/sync', async (req, res) => {
 
     // Ensure church row exists (prevents FK constraint errors in SQLite fallback)
     await connection.query(
-      `INSERT OR IGNORE INTO churches (id, church_name, status, districtId, conferenceId) VALUES (?, ?, 'approved', 'dist_001', 'conf_001')`,
+      `INSERT OR IGNORE INTO churches (id, church_name, status, districtId, province, location, email, phone_number, clerkName, clerkEmail) VALUES (?, ?, 'approved', 'dist_001', 'Lusaka', 'Main St', 'church@sda.org', '+260000000', 'Clerk', 'clerk@church.com')`,
       [churchId, churchId]
     );
 
