@@ -1,6 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Users, ClipboardList, Bell, History, User, Plus, Trash2, Edit3, X, Save, Send, Eye, EyeOff, Lock, CheckCircle, ChevronDown, ChevronUp, Calendar, Phone, MapPin, BookOpen, UserPlus } from 'lucide-react';
+import {
+  Users, ClipboardList, Bell, History, User, Plus, Trash2, Edit3, X, Save,
+  Send, Eye, EyeOff, Lock, CheckCircle, ChevronDown, ChevronUp, Calendar,
+  Phone, MapPin, BookOpen, UserPlus, Mail, ShieldCheck
+} from 'lucide-react';
 import { User as UserType, Class, Announcement, AttendanceRecord, Student, Visitor } from '../types.ts';
 
 interface TeacherDashboardProps {
@@ -21,9 +25,24 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   user, churchClass, submitAnnouncement, submitAttendance, addStudent, removeStudent,
   updateStudent, attendanceRecords, updatePassword, isProfileOpen, onCloseProfile
 }) => {
-  const [activeTab, setActiveTab] = useState<'attendance'|'announcements'|'roster'|'history'>('attendance');
+  const [activeTab, setActiveTab] = useState<'attendance'|'announcements'|'roster'|'history'>('roster');
   const [announcementText, setAnnouncementText] = useState('');
   
+  // Student modal states
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+
+  // Form states for student
+  const [studentName, setStudentName] = useState('');
+  const [studentPhone, setStudentPhone] = useState('');
+  const [studentEmail, setStudentEmail] = useState('');
+  const [studentAge, setStudentAge] = useState<string>('');
+  const [studentGender, setStudentGender] = useState<'MALE' | 'FEMALE' | 'OTHER'>('MALE');
+  const [studentBaptized, setStudentBaptized] = useState(false);
+  const [studentEmergency, setStudentEmergency] = useState('');
+  const [studentAddress, setStudentAddress] = useState('');
+
   // Basic student attendance state
   const [attendanceState, setAttendanceState] = useState<Record<string, Student['attendanceStatus']>>({});
   
@@ -60,10 +79,80 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       className: churchClass.name,
       content: announcementText,
       timestamp: new Date().toISOString(),
-      status: 'pending'
+      status: 'pending',
+      targetType: 'CHURCH',
+      targetId: user.churchId || ''
     });
     setAnnouncementText('');
-    alert("Announcement submitted!");
+    alert("Announcement submitted to Church Clerk!");
+  };
+
+  const handleOpenAddModal = () => {
+    setStudentName('');
+    setStudentPhone('');
+    setStudentEmail('');
+    setStudentAge('');
+    setStudentGender('MALE');
+    setStudentBaptized(false);
+    setStudentEmergency('');
+    setStudentAddress('');
+    setShowAddModal(true);
+  };
+
+  const handleSaveNewStudent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!studentName.trim()) {
+      alert("Please enter student name.");
+      return;
+    }
+
+    addStudent(churchClass.id, {
+      name: studentName.trim(),
+      attendanceStatus: 'unmarked',
+      lessonStudied: false,
+      phone: studentPhone.trim() || undefined,
+      email: studentEmail.trim().toLowerCase() || undefined,
+      age: studentAge ? parseInt(studentAge, 10) : undefined,
+      gender: studentGender,
+      baptized: studentBaptized,
+      emergency_contact: studentEmergency.trim() || undefined,
+      address: studentAddress.trim() || undefined
+    });
+
+    setShowAddModal(false);
+  };
+
+  const handleOpenEditModal = (s: Student) => {
+    setEditingStudent(s);
+    setStudentName(s.name);
+    setStudentPhone(s.phone || '');
+    setStudentEmail(s.email || '');
+    setStudentAge(s.age ? s.age.toString() : '');
+    setStudentGender(s.gender || 'MALE');
+    setStudentBaptized(!!s.baptized);
+    setStudentEmergency(s.emergency_contact || '');
+    setStudentAddress(s.address || '');
+    setShowEditModal(true);
+  };
+
+  const handleSaveEditStudent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudent || !studentName.trim()) return;
+
+    updateStudent(churchClass.id, {
+      ...editingStudent,
+      name: studentName.trim(),
+      phone: studentPhone.trim() || undefined,
+      email: studentEmail.trim().toLowerCase() || undefined,
+      age: studentAge ? parseInt(studentAge, 10) : undefined,
+      gender: studentGender,
+      baptized: studentBaptized,
+      emergency_contact: studentEmergency.trim() || undefined,
+      address: studentAddress.trim() || undefined
+    });
+
+    setShowEditModal(false);
+    setEditingStudent(null);
   };
 
   return (
@@ -90,93 +179,155 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               activeTab === tab ? 'bg-blue-950 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            {tab}
+            {tab === 'roster' ? `Class Roster (${churchClass.students.length})` : tab}
           </button>
         ))}
       </div>
 
+      {/* 1. ATTENDANCE TAB */}
       {activeTab === 'attendance' && (
          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><ClipboardList className="text-amber-500" /> Mark Attendance</h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold flex items-center gap-2"><ClipboardList className="text-amber-500" /> Mark Attendance</h2>
+              <button onClick={() => setActiveTab('roster')} className="text-blue-950 text-xs font-bold hover:underline flex items-center gap-1">
+                <UserPlus size={14} /> Add Members to Class
+              </button>
+            </div>
             
             <div className="space-y-4 mb-8">
                {churchClass.students.map(student => (
                  <div key={student.id} className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border rounded-xl bg-slate-50 gap-4">
-                    <div className="font-bold">{student.name}</div>
+                    <div>
+                      <div className="font-bold text-slate-900">{student.name}</div>
+                      <div className="text-xs text-slate-500">{student.phone || student.email || 'No contact saved'}</div>
+                    </div>
                     <div className="flex gap-2 flex-wrap">
-                       <button onClick={() => handleMark(student.id, 'present')} className={`px-3 py-1 rounded-full text-xs font-bold ${attendanceState[student.id] === 'present' ? 'bg-emerald-500 text-white' : 'bg-white border text-slate-500'}`}>Present</button>
-                       <button onClick={() => handleMark(student.id, 'absent')} className={`px-3 py-1 rounded-full text-xs font-bold ${attendanceState[student.id] === 'absent' ? 'bg-red-500 text-white' : 'bg-white border text-slate-500'}`}>Absent</button>
-                       <button onClick={() => handleMark(student.id, 'sick')} className={`px-3 py-1 rounded-full text-xs font-bold ${attendanceState[student.id] === 'sick' ? 'bg-amber-500 text-white' : 'bg-white border text-slate-500'}`}>Sick</button>
+                       <button onClick={() => handleMark(student.id, 'present')} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${attendanceState[student.id] === 'present' ? 'bg-emerald-500 text-white shadow-sm' : 'bg-white border text-slate-600 hover:bg-slate-50'}`}>Present</button>
+                       <button onClick={() => handleMark(student.id, 'absent')} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${attendanceState[student.id] === 'absent' ? 'bg-red-500 text-white shadow-sm' : 'bg-white border text-slate-600 hover:bg-slate-50'}`}>Absent</button>
+                       <button onClick={() => handleMark(student.id, 'sick')} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${attendanceState[student.id] === 'sick' ? 'bg-amber-500 text-white shadow-sm' : 'bg-white border text-slate-600 hover:bg-slate-50'}`}>Sick</button>
                     </div>
                  </div>
                ))}
-               {churchClass.students.length === 0 && <p className="text-slate-500 text-sm">No students in roster.</p>}
+               {churchClass.students.length === 0 && (
+                 <div className="text-center py-12 text-slate-400">
+                    <p className="text-sm font-semibold mb-3">No students in your class roster yet.</p>
+                    <button onClick={handleOpenAddModal} className="bg-amber-500 hover:bg-amber-400 text-blue-950 font-bold px-4 py-2 rounded-xl text-xs inline-flex items-center gap-1.5 shadow-md">
+                      <UserPlus size={16} /> Add Your First Student
+                    </button>
+                 </div>
+               )}
             </div>
 
-            <button onClick={handleAttendanceSubmit} disabled={churchClass.students.length === 0} className="w-full bg-blue-950 hover:bg-blue-900 text-white font-black py-4 rounded-xl flex justify-center items-center gap-2 transition-all">
+            <button onClick={handleAttendanceSubmit} disabled={churchClass.students.length === 0} className="w-full bg-blue-950 hover:bg-blue-900 disabled:opacity-40 text-white font-black py-4 rounded-xl flex justify-center items-center gap-2 transition-all shadow-md">
                <Save size={20} /> SUBMIT ATTENDANCE
             </button>
          </div>
       )}
 
+      {/* 2. ANNOUNCEMENTS TAB */}
       {activeTab === 'announcements' && (
          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Bell className="text-amber-500" /> Submit Report / Announcement</h2>
             <textarea
                value={announcementText}
                onChange={e => setAnnouncementText(e.target.value)}
-               className="w-full border-2 border-slate-200 rounded-xl p-4 min-h-[150px] mb-4 outline-none focus:border-blue-500 transition-colors"
-               placeholder="Write your class report, prayer request, or announcement here..."
+               className="w-full border-2 border-slate-200 rounded-xl p-4 min-h-[150px] mb-4 outline-none focus:border-blue-500 transition-colors text-sm"
+               placeholder="Write your class report, prayer request, or announcement for the Sabbath School bulletin..."
             />
-            <button onClick={handleAnnounceSubmit} className="bg-amber-500 hover:bg-amber-600 text-blue-950 font-black py-3 px-6 rounded-xl flex items-center gap-2 transition-all">
+            <button onClick={handleAnnounceSubmit} className="bg-amber-500 hover:bg-amber-600 text-blue-950 font-black py-3 px-6 rounded-xl flex items-center gap-2 transition-all shadow-md">
                <Send size={18} /> Submit to Clerk
             </button>
          </div>
       )}
 
+      {/* 3. ROSTER TAB */}
       {activeTab === 'roster' && (
          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-            <div className="flex justify-between items-center mb-6">
-               <h2 className="text-xl font-bold flex items-center gap-2"><Users className="text-amber-500" /> Class Roster</h2>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+               <div>
+                  <h2 className="text-xl font-bold flex items-center gap-2"><Users className="text-amber-500" /> Class Roster</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Manage Sabbath School members registered in this class.</p>
+               </div>
+               <button
+                  onClick={handleOpenAddModal}
+                  className="bg-blue-950 hover:bg-blue-900 text-white font-bold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 shadow-md transition-all"
+               >
+                  <UserPlus size={16} /> Add Member / Student
+               </button>
             </div>
             
             <div className="overflow-x-auto">
                <table className="w-full text-left">
-                  <thead><tr className="bg-slate-50 text-slate-500 text-xs uppercase"><th className="p-3">Name</th><th className="p-3">Contact</th><th className="p-3">Age/Gender</th><th className="p-3">Baptized</th><th className="p-3">Actions</th></tr></thead>
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 text-xs uppercase border-b border-slate-100">
+                      <th className="p-3">Name</th>
+                      <th className="p-3">Contact</th>
+                      <th className="p-3">Age / Gender</th>
+                      <th className="p-3">Baptized</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
                   <tbody>
                      {churchClass.students.map(s => (
-                        <tr key={s.id} className="border-b border-slate-100 last:border-0">
-                           <td className="p-3 font-bold">{s.name}</td>
-                           <td className="p-3 text-sm text-slate-600">{s.phone || s.email || 'N/A'}</td>
-                           <td className="p-3 text-sm text-slate-600">{s.age || '?'} / {s.gender || '?'}</td>
+                        <tr key={s.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
+                           <td className="p-3 font-bold text-slate-900">{s.name}</td>
+                           <td className="p-3 text-sm text-slate-600">{s.phone || s.email || '—'}</td>
+                           <td className="p-3 text-sm text-slate-600">{s.age || '?'} / {s.gender || 'MALE'}</td>
                            <td className="p-3 text-sm">
                               <span className={`px-2 py-1 rounded-full text-xs font-bold ${s.baptized ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'}`}>
-                                 {s.baptized ? 'Yes' : 'No'}
+                                 {s.baptized ? '✅ Yes' : 'No'}
                               </span>
                            </td>
-                           <td className="p-3">
-                              <button onClick={() => removeStudent(churchClass.id, s.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"><Trash2 size={16} /></button>
+                           <td className="p-3 text-right flex justify-end gap-2">
+                              <button onClick={() => handleOpenEditModal(s)} className="text-slate-600 hover:text-blue-950 hover:bg-slate-100 p-2 rounded-lg transition-colors" title="Edit Student">
+                                <Edit3 size={16} />
+                              </button>
+                              <button onClick={() => { if(confirm(`Remove ${s.name} from roster?`)) removeStudent(churchClass.id, s.id); }} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" title="Delete Student">
+                                <Trash2 size={16} />
+                              </button>
                            </td>
                         </tr>
                      ))}
-                     {churchClass.students.length === 0 && <tr><td colSpan={5} className="p-4 text-center text-slate-500">No students added yet.</td></tr>}
+                     {churchClass.students.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="p-8 text-center text-slate-400">
+                            <Users size={32} className="mx-auto mb-2 text-slate-300" />
+                            <p className="font-semibold text-slate-600 text-sm mb-2">No students added yet.</p>
+                            <p className="text-xs text-slate-400 mb-4">Click below to add your class members and start recording attendance.</p>
+                            <button
+                              onClick={handleOpenAddModal}
+                              className="bg-amber-500 hover:bg-amber-400 text-blue-950 font-bold px-4 py-2 rounded-xl text-xs inline-flex items-center gap-1.5 shadow-md"
+                            >
+                              <UserPlus size={16} /> Add First Student
+                            </button>
+                          </td>
+                        </tr>
+                     )}
                   </tbody>
                </table>
             </div>
          </div>
       )}
 
+      {/* 4. HISTORY TAB */}
       {activeTab === 'history' && (
          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><History className="text-amber-500" /> My Attendance History</h2>
             {attendanceRecords.filter(r => r.teacherId === user.id).length > 0 ? (
                <div className="overflow-x-auto">
                   <table className="w-full text-left">
-                     <thead><tr className="bg-slate-50 text-slate-500 text-xs uppercase"><th className="p-3">Date</th><th className="p-3">Total</th><th className="p-3">Present</th><th className="p-3">Absent</th></tr></thead>
+                     <thead>
+                       <tr className="bg-slate-50 text-slate-500 text-xs uppercase border-b border-slate-100">
+                         <th className="p-3">Date</th>
+                         <th className="p-3">Total</th>
+                         <th className="p-3">Present</th>
+                         <th className="p-3">Absent</th>
+                       </tr>
+                     </thead>
                      <tbody>
                         {attendanceRecords.filter(r => r.teacherId === user.id).map(r => (
-                           <tr key={r.id} className="border-b border-slate-100 last:border-0">
-                              <td className="p-3 font-bold">{r.date}</td>
+                           <tr key={r.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50">
+                              <td className="p-3 font-bold text-slate-800">{r.date}</td>
                               <td className="p-3">{r.totalStudents}</td>
                               <td className="p-3 text-emerald-600 font-bold">{r.presentCount}</td>
                               <td className="p-3 text-red-600">{r.absentCount}</td>
@@ -185,14 +336,243 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                      </tbody>
                   </table>
                </div>
-            ) : <p className="text-slate-500">No past records found.</p>}
+            ) : (
+              <div className="text-center py-10 text-slate-400 text-sm">
+                No past attendance records submitted yet.
+              </div>
+            )}
          </div>
+      )}
+
+      {/* Add Student Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-blue-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl animate-fade-in border border-slate-100">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                <UserPlus className="text-amber-500" /> Add Member / Student
+              </h3>
+              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-700">
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveNewStudent} className="space-y-4">
+              <div>
+                <label className="block text-slate-700 text-xs font-bold uppercase tracking-wider mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  value={studentName}
+                  onChange={e => setStudentName(e.target.value)}
+                  required
+                  placeholder="e.g. Bro. Emmanuel Phiri"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-700 text-xs font-bold uppercase tracking-wider mb-1">Phone Number</label>
+                  <input
+                    type="tel"
+                    value={studentPhone}
+                    onChange={e => setStudentPhone(e.target.value)}
+                    placeholder="+260 97X XXX XXX"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 text-xs font-bold uppercase tracking-wider mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    value={studentEmail}
+                    onChange={e => setStudentEmail(e.target.value)}
+                    placeholder="student@church.com"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-700 text-xs font-bold uppercase tracking-wider mb-1">Age</label>
+                  <input
+                    type="number"
+                    value={studentAge}
+                    onChange={e => setStudentAge(e.target.value)}
+                    placeholder="e.g. 24"
+                    min="1"
+                    max="120"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 text-xs font-bold uppercase tracking-wider mb-1">Gender</label>
+                  <select
+                    value={studentGender}
+                    onChange={e => setStudentGender(e.target.value as any)}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500 bg-white"
+                  >
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 text-xs font-bold uppercase tracking-wider mb-1">Emergency Contact / Parent</label>
+                <input
+                  type="text"
+                  value={studentEmergency}
+                  onChange={e => setStudentEmergency(e.target.value)}
+                  placeholder="e.g. Mrs. Phiri (+260 96X XXX XXX)"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <input
+                  type="checkbox"
+                  id="baptized_check"
+                  checked={studentBaptized}
+                  onChange={e => setStudentBaptized(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                <label htmlFor="baptized_check" className="text-sm font-semibold text-slate-700 cursor-pointer">
+                  Baptized Member of the Seventh-day Adventist Church
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 border border-slate-200 text-slate-600 font-bold py-2.5 rounded-xl text-sm hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-blue-950 hover:bg-blue-900 text-white font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 shadow-md"
+                >
+                  <Save size={16} /> Save Student
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Student Modal */}
+      {showEditModal && editingStudent && (
+        <div className="fixed inset-0 bg-blue-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl animate-fade-in border border-slate-100">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                <Edit3 className="text-amber-500" /> Edit Member Details
+              </h3>
+              <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-700">
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditStudent} className="space-y-4">
+              <div>
+                <label className="block text-slate-700 text-xs font-bold uppercase tracking-wider mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  value={studentName}
+                  onChange={e => setStudentName(e.target.value)}
+                  required
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-700 text-xs font-bold uppercase tracking-wider mb-1">Phone Number</label>
+                  <input
+                    type="tel"
+                    value={studentPhone}
+                    onChange={e => setStudentPhone(e.target.value)}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 text-xs font-bold uppercase tracking-wider mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    value={studentEmail}
+                    onChange={e => setStudentEmail(e.target.value)}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-700 text-xs font-bold uppercase tracking-wider mb-1">Age</label>
+                  <input
+                    type="number"
+                    value={studentAge}
+                    onChange={e => setStudentAge(e.target.value)}
+                    min="1"
+                    max="120"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 text-xs font-bold uppercase tracking-wider mb-1">Gender</label>
+                  <select
+                    value={studentGender}
+                    onChange={e => setStudentGender(e.target.value as any)}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500 bg-white"
+                  >
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <input
+                  type="checkbox"
+                  id="edit_baptized_check"
+                  checked={studentBaptized}
+                  onChange={e => setStudentBaptized(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                />
+                <label htmlFor="edit_baptized_check" className="text-sm font-semibold text-slate-700 cursor-pointer">
+                  Baptized Member
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 border border-slate-200 text-slate-600 font-bold py-2.5 rounded-xl text-sm hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-blue-950 hover:bg-blue-900 text-white font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 shadow-md"
+                >
+                  <Save size={16} /> Update Details
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Profile Modal */}
       {isProfileOpen && (
          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative animate-fade-in">
                <button onClick={onCloseProfile} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={24}/></button>
                <h2 className="text-2xl font-black mb-6">My Profile</h2>
                <div className="space-y-4 mb-6 text-sm">
