@@ -16,7 +16,7 @@ import Navigation from './components/Navigation.tsx';
 import SDALogo from './components/SDALogo.tsx';
 import { DatabaseZap } from 'lucide-react';
 
-const BACKEND_URL = 'http://localhost:3001/api';
+import { BACKEND_URL } from './config.ts';
 const CHURCH_ID = (() => {
   const host = window.location.hostname;
   if (host && host !== 'localhost' && host !== '127.0.0.1') {

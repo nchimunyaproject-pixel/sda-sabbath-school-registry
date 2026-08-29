@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import SDALogo from '../components/SDALogo.tsx';
 
-const BACKEND_URL = 'http://localhost:3001/api';
+import { BACKEND_URL } from '../config.ts';
 
 const ResetPasswordPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();

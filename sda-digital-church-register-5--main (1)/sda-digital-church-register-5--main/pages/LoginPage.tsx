@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate as useNav } from 'react-router-dom';
 import { User, Role } from '../types.ts';
+import { BACKEND_URL } from '../config.ts';
 import SDALogo from '../components/SDALogo.tsx';
 import {
   Eye, EyeOff, LogIn, Mail, Lock, ChevronRight, RefreshCw,
@@ -310,7 +311,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
 
     if (isBackendConnected) {
       try {
-        const response = await fetch('http://localhost:3001/api/auth/login', {
+        const response = await fetch(`${BACKEND_URL}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: emailClean, password })
