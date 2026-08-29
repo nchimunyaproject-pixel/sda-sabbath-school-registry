@@ -291,6 +291,9 @@ const App: React.FC = () => {
           if (parsed.pendingDistrictRegs) setPendingDistrictRegs(parsed.pendingDistrictRegs);
           if (parsed.teachers) setTeachers(parsed.teachers);
           if (parsed.classes) setClasses(parsed.classes);
+          if (parsed.announcements) setAnnouncements(parsed.announcements);
+          if (parsed.attendanceRecords) setAttendanceRecords(parsed.attendanceRecords);
+          if (parsed.offerings) setOfferings(parsed.offerings);
         } catch (err) {}
       }
     };
