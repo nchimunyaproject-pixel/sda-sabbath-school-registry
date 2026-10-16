@@ -1,0 +1,1359 @@
+{
+  "conferences": [
+    {
+      "id": "conf-lusaka",
+      "name": "Lusaka Conference",
+      "presidentName": "Pastor Dr. Harrington Simpasa",
+      "presidentEmail": "president@conference.org",
+      "presidentPhone": "+260 211 251234",
+      "headquartersCity": "Lusaka",
+      "unionName": "Southern Zambia Union Conference (SZUC)",
+      "address": "Plot 3025, Independence Avenue, Lusaka",
+      "phone": "+260 211 251234",
+      "email": "info@lusakaconference.org",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "conf-midlands",
+      "name": "Midlands Conference",
+      "presidentName": "Pastor C. M. Mulenga",
+      "presidentEmail": "president@midlands.org",
+      "headquartersCity": "Kabwe",
+      "unionName": "Southern Zambia Union Conference (SZUC)",
+      "phone": "+260 215 222100",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "conf-copperbelt",
+      "name": "Copperbelt Conference",
+      "presidentName": "Pastor S. K. Chilufya",
+      "presidentEmail": "president@copperbelt.org",
+      "headquartersCity": "Ndola",
+      "unionName": "Northern Zambia Union Conference (NZUC)",
+      "phone": "+260 212 612300",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "districts": [
+    {
+      "id": "dist-woodlands",
+      "name": "Woodlands District",
+      "conferenceId": "conf-lusaka",
+      "conferenceName": "Lusaka Conference",
+      "pastorName": "Pastor Kelvin Mwale",
+      "pastorEmail": "pastor@district.org",
+      "pastorPhone": "+260 977 888111",
+      "headquartersChurchId": "church-woodlands",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "dist-central",
+      "name": "Central Lusaka District",
+      "conferenceId": "conf-lusaka",
+      "conferenceName": "Lusaka Conference",
+      "pastorName": "Pastor Emmanuel Lungu",
+      "pastorEmail": "pastor.lungu@district.org",
+      "pastorPhone": "+260 977 777222",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "dist-matero",
+      "name": "Matero District",
+      "conferenceId": "conf-lusaka",
+      "conferenceName": "Lusaka Conference",
+      "pastorName": "Pastor David Banda",
+      "pastorEmail": "pastor.banda@district.org",
+      "pastorPhone": "+260 977 666333",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "superAdmins": [
+    {
+      "id": "superadmin-1",
+      "name": "Elder Dr. G. T. Ngwira",
+      "email": "superadmin@sda.org",
+      "password": "admin123",
+      "role": "SUPER_ADMIN",
+      "title": "System Super Admin (Overall Portal Overseer)",
+      "phone": "+260 977 999000",
+      "status": "active"
+    }
+  ],
+  "conferencePresidents": [
+    {
+      "id": "president-1",
+      "name": "Pastor Dr. Harrington Simpasa",
+      "email": "president@conference.org",
+      "password": "president123",
+      "role": "CONFERENCE_PRESIDENT",
+      "conferenceId": "conf-lusaka",
+      "conferenceName": "Lusaka Conference",
+      "title": "Conference President (Executive Overseer)",
+      "phone": "+260 977 555444",
+      "status": "active"
+    }
+  ],
+  "districtPastors": [
+    {
+      "id": "pastor-1",
+      "name": "Pastor Kelvin Mwale",
+      "email": "pastor@district.org",
+      "password": "pastor123",
+      "role": "DISTRICT_PASTOR",
+      "conferenceId": "conf-lusaka",
+      "conferenceName": "Lusaka Conference",
+      "districtId": "dist-woodlands",
+      "districtName": "Woodlands District",
+      "churchId": "church-woodlands",
+      "churchName": "Woodlands SDA Church",
+      "title": "District Pastor (Pastoral Overseer)",
+      "phone": "+260 977 888111",
+      "status": "active"
+    }
+  ],
+  "churches": [
+    {
+      "id": "church-woodlands",
+      "name": "Woodlands SDA Church",
+      "conference": "Lusaka Conference",
+      "conferenceId": "conf-lusaka",
+      "district": "Woodlands District",
+      "districtId": "dist-woodlands",
+      "city": "Lusaka",
+      "address": "Woodlands Main Road, Lusaka, Zambia",
+      "phone": "+260 211 254890",
+      "email": "woodlands@church.org",
+      "elderName": "Elder M. S. Banda",
+      "elderEmail": "elder@church.org",
+      "pastorName": "Pastor Kelvin Mwale",
+      "isDemo": true,
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "churchAdmins": [
+    {
+      "id": "elder-1",
+      "name": "Elder M. S. Banda",
+      "email": "elder@church.org",
+      "password": "elder123",
+      "role": "CHURCH_ADMIN",
+      "churchId": "church-woodlands",
+      "churchName": "Woodlands SDA Church",
+      "title": "Church Admin Elder (Main Admin)",
+      "phone": "+260 977 100200",
+      "status": "active"
+    }
+  ],
+  "clerks": [
+    {
+      "id": "clerk-1",
+      "name": "Sister P. Tembo",
+      "email": "clerk@church.org",
+      "password": "clerk123",
+      "role": "CLERK",
+      "churchName": "Woodlands SDA Church",
+      "title": "Church Clerk (Secretariat)",
+      "phone": "+260 977 200300",
+      "status": "active"
+    }
+  ],
+  "admins": [
+    {
+      "id": "admin-1",
+      "name": "Elder M. S. Banda",
+      "email": "clerk@church.org",
+      "password": "password123",
+      "role": "CLERK",
+      "churchName": "Woodlands SDA Church"
+    }
+  ],
+  "teachers": [
+    {
+      "id": "t1",
+      "name": "Elder Musonda",
+      "email": "musonda@church.org",
+      "password": "password123",
+      "role": "TEACHER",
+      "assignedClass": "c1",
+      "language": "English"
+    },
+    {
+      "id": "t2",
+      "name": "Sister Chanda",
+      "email": "chanda@church.org",
+      "password": "password123",
+      "role": "TEACHER",
+      "assignedClass": "c2"
+    },
+    {
+      "id": "t3",
+      "name": "Brother Mwale",
+      "email": "mwale@church.org",
+      "password": "password123",
+      "role": "TEACHER",
+      "assignedClass": "c3"
+    }
+  ],
+  "classes": [
+    {
+      "id": "c1",
+      "name": "Adult Sabbath School",
+      "language": "English",
+      "teacherId": "t1",
+      "churchId": "admin-1",
+      "students": [
+        {
+          "id": "s1",
+          "name": "Alice Walker",
+          "classId": "c1",
+          "attendanceStatus": "unmarked",
+          "memberId": "mem-1"
+        },
+        {
+          "id": "s2",
+          "name": "Robert Miller",
+          "classId": "c1",
+          "attendanceStatus": "unmarked",
+          "memberId": "mem-2"
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "name": "Youth Ministry",
+      "teacherId": "t2",
+      "churchId": "admin-1",
+      "students": [
+        {
+          "id": "s3",
+          "name": "Sarah Jenkins",
+          "classId": "c2",
+          "attendanceStatus": "unmarked",
+          "memberId": "mem-3"
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "name": "Primary Class",
+      "teacherId": "t3",
+      "churchId": "admin-1",
+      "students": [
+        {
+          "id": "s4",
+          "name": "Little Timmy",
+          "classId": "c3",
+          "attendanceStatus": "unmarked",
+          "memberId": "mem-4"
+        }
+      ]
+    }
+  ],
+  "announcements": [
+    {
+      "id": "a1",
+      "teacherId": "t1",
+      "teacherName": "Elder Musonda",
+      "className": "Adult Sabbath School",
+      "content": "Please study Lesson 11 daily. Sabbath School begins promptly at 08:30 AM with song service.",
+      "timestamp": "2026-09-12T08:00:00Z",
+      "status": "approved"
+    }
+  ],
+  "attendanceRecords": [],
+  "transferRequests": [
+    {
+      "id": "tr-1",
+      "studentName": "Michael Tembo",
+      "memberId": "mem-ex-1",
+      "transferType": "incoming",
+      "fromChurchId": "ch-lusaka-central",
+      "fromChurchName": "Lusaka Central SDA Church",
+      "toChurchId": "admin-initial",
+      "toChurchName": "Woodlands SDA Church",
+      "status": "approved",
+      "requestDate": "2026-08-05",
+      "boardVoteDate": "2026-08-10",
+      "boardResolutionNo": "RES-2026-015",
+      "firstReadingDate": "2026-08-16",
+      "secondReadingDate": "2026-10-14",
+      "reason": "Relocated residence to Woodlands area for employment.",
+      "clerkNotes": "voted",
+      "approvalDate": "2026-10-14",
+      "eAdventistSynced": true
+    },
+    {
+      "id": "tr-2",
+      "studentName": "Ruth Bwalya",
+      "memberId": "mem-9",
+      "transferType": "outgoing",
+      "fromChurchId": "admin-initial",
+      "fromChurchName": "Woodlands SDA Church",
+      "toChurchId": "ch-riverside-kitwe",
+      "toChurchName": "Riverside SDA Church, Kitwe",
+      "status": "first_reading",
+      "requestDate": "2026-08-02",
+      "boardVoteDate": "2026-08-10",
+      "boardResolutionNo": "RES-2026-018",
+      "firstReadingDate": "2026-08-16",
+      "reason": "Transferred to Copperbelt University for post-graduate studies.",
+      "clerkNotes": "Board recommendation passed. 2nd reading scheduled for next Sabbath."
+    },
+    {
+      "id": "tr-3",
+      "studentName": "Priscilla Chimuka",
+      "memberId": "mem-ex-3",
+      "transferType": "incoming",
+      "fromChurchId": "ch-libala",
+      "fromChurchName": "Libala SDA Church",
+      "toChurchId": "admin-initial",
+      "toChurchName": "Woodlands SDA Church",
+      "status": "pending_board",
+      "requestDate": "2026-08-28",
+      "reason": "Marriage and change of home church.",
+      "clerkNotes": "Official transfer request form received via Conference portal."
+    }
+  ],
+  "churchMembers": [
+    {
+      "id": "mem-1",
+      "name": "Alice Walker",
+      "memberNumber": "WDL-2024-001",
+      "givenNames": "Alice",
+      "primarySurname": "Walker",
+      "churchId": "admin-1",
+      "status": "active",
+      "baptismDate": "2015-06-20",
+      "dob": "1988-04-12",
+      "gender": "female",
+      "contact": "+260 97 1234567",
+      "email": "alice.w@example.com",
+      "address": "Plot 42, Woodlands Extension, Lusaka",
+      "familyUnitId": "fam-1",
+      "relationshipToHead": "Head of Household",
+      "memberType": "baptized",
+      "outreachFlag": false,
+      "lastAttendDate": "2026-09-05"
+    },
+    {
+      "id": "mem-2",
+      "name": "Robert Miller",
+      "memberNumber": "WDL-2024-002",
+      "givenNames": "Robert",
+      "primarySurname": "Miller",
+      "churchId": "admin-1",
+      "status": "active",
+      "baptismDate": "2010-11-14",
+      "dob": "1982-08-30",
+      "gender": "male",
+      "contact": "+260 96 9876543",
+      "email": "robert.m@example.com",
+      "address": "14 Kabulonga Road, Lusaka",
+      "familyUnitId": "fam-2",
+      "relationshipToHead": "Head of Household",
+      "memberType": "baptized",
+      "outreachFlag": false,
+      "lastAttendDate": "2026-09-12"
+    },
+    {
+      "id": "mem-3",
+      "name": "Sarah Jenkins",
+      "memberNumber": "WDL-2024-003",
+      "givenNames": "Sarah",
+      "primarySurname": "Jenkins",
+      "churchId": "admin-1",
+      "status": "active",
+      "baptismDate": "2021-04-10",
+      "dob": "2004-01-15",
+      "gender": "female",
+      "contact": "+260 95 5551234",
+      "email": "sarah.j@example.com",
+      "address": "Plot 10, Chilenje South, Lusaka",
+      "familyUnitId": "fam-3",
+      "relationshipToHead": "Child",
+      "memberType": "baptized",
+      "outreachFlag": false,
+      "lastAttendDate": "2026-09-12"
+    },
+    {
+      "id": "mem-4",
+      "name": "Little Timmy",
+      "memberNumber": "WDL-2024-004",
+      "givenNames": "Timothy",
+      "primarySurname": "Chanda",
+      "churchId": "admin-1",
+      "status": "active",
+      "dob": "2017-09-22",
+      "gender": "male",
+      "address": "Plot 8, Nyumba Yanga, Lusaka",
+      "familyUnitId": "fam-4",
+      "relationshipToHead": "Child",
+      "memberType": "unbaptized_child",
+      "outreachFlag": false,
+      "lastAttendDate": "2026-09-12"
+    }
+  ],
+  "familyUnits": [
+    {
+      "id": "fam-1",
+      "churchId": "admin-1",
+      "familyName": "Walker Household",
+      "primaryContactId": "mem-1",
+      "primaryContactName": "Alice Walker",
+      "address": "Plot 42, Woodlands Extension, Lusaka",
+      "contactPhone": "+260 97 1234567"
+    }
+  ],
+  "meetings": [
+    {
+      "id": "meet-1",
+      "churchId": "admin-initial",
+      "title": "Regular Monthly Church Board Meeting",
+      "type": "BOARD",
+      "date": "2026-08-10",
+      "time": "18:30 - 20:45",
+      "location": "Church Boardroom & Zoom",
+      "quorumConfirmed": true,
+      "quorumCount": 14,
+      "attendees": [
+        "Pastor H. Chisenga (Chair)",
+        "Elder Musonda (Head Elder)",
+        "Sister Chanda (Clerk / Secretary)",
+        "Brother Mwale (Treasurer)",
+        "Brother B. Zulu (Head Deacon)",
+        "Sister M. Kalunga (Head Deaconess)",
+        "Elder P. Banda (Personal Ministries)"
+      ],
+      "absentees": [
+        "Sister T. Banda (Apology received - travel)"
+      ],
+      "agenda": [
+        "1. Devotion & Season of Prayer",
+        "2. Reading and Confirmation of Previous Minutes",
+        "3. Membership Transfer Requests (In & Out)",
+        "4. Evangelistic Campaign Budget & Dates",
+        "5. Recommendation on Disciplinary Matters"
+      ],
+      "minutes": "The Church Board convened on Monday evening. Pastor Chisenga led the devotional from Nehemiah 2 emphasizing collaborative leadership and spiritual diligence. Following discussion, transfer recommendations were carried for reading before the congregation. Budget for the upcoming Voice of Prophecy effort was reviewed and recommended for business meeting ratification.",
+      "resolutions": [
+        {
+          "id": "res-1",
+          "meetingId": "meet-1",
+          "resolutionNumber": "RES-2026-018",
+          "motion": "VOTED: To recommend to the church in business session the granting of letters of transfer for Sister Ruth Bwalya to Riverside SDA Church, Kitwe.",
+          "mover": "Sister Chanda (Clerk)",
+          "seconder": "Brother B. Zulu",
+          "tag": "Membership Action",
+          "status": "Carried",
+          "requiresBusinessMeeting": true,
+          "votedDate": "2026-08-10"
+        },
+        {
+          "id": "res-2",
+          "meetingId": "meet-1",
+          "resolutionNumber": "RES-2026-019",
+          "motion": "VOTED: To approve the procurement of 250 copies of the Adult Sabbath School Quarterly in Bemba and Tonga for Q4 distribution.",
+          "mover": "Brother Mwale (Treasurer)",
+          "seconder": "Elder Musonda",
+          "tag": "Financial/Building",
+          "status": "Carried",
+          "requiresBusinessMeeting": false,
+          "votedDate": "2026-08-10"
+        }
+      ]
+    },
+    {
+      "id": "meet-2",
+      "churchId": "admin-initial",
+      "title": "Q3 Church Business Meeting",
+      "type": "BUSINESS",
+      "date": "2026-08-23",
+      "time": "14:30 - 17:00",
+      "location": "Main Church Sanctuary",
+      "quorumConfirmed": true,
+      "quorumCount": 86,
+      "attendees": [
+        "Church Officers & Baptized Resident Members"
+      ],
+      "absentees": [],
+      "agenda": [
+        "1. Opening Song & Prayer",
+        "2. Church Clerk Membership Report (Additions, Transfers, Deaths)",
+        "3. Treasurer Financial Statement",
+        "4. Final Vote on Second Readings of Membership Transfers",
+        "5. Ratification of Standing Committee Appointments"
+      ],
+      "minutes": "Duly called quarterly church business meeting. Notice was given in the church bulletin for two consecutive Sabbaths in accordance with the SDA Church Manual. Membership additions by baptism and profession of faith were celebrated. The treasurer presented the Q2 audited financial summary. Second readings of outgoing and incoming transfers were conducted and affirmed by congregation vote.",
+      "resolutions": [
+        {
+          "id": "res-3",
+          "meetingId": "meet-2",
+          "resolutionNumber": "RES-2026-020",
+          "motion": "VOTED: Following second public reading, the church confirmed the reception of Brother Michael Tembo by transfer from Lusaka Central Church.",
+          "mover": "Sister Chanda (Clerk)",
+          "seconder": "Elder Musonda",
+          "tag": "Membership Action",
+          "status": "Carried",
+          "requiresBusinessMeeting": true,
+          "votedDate": "2026-08-23"
+        }
+      ]
+    }
+  ],
+  "officers": [
+    {
+      "id": "off-1",
+      "churchId": "admin-initial",
+      "title": "Head Elder",
+      "department": "Pastoral & Elders",
+      "officerName": "Elder Musonda",
+      "contact": "+260 977 111222",
+      "email": "musonda@church.org",
+      "termYear": "2026 - 2027",
+      "isChair": true,
+      "committeeName": "Board of Elders"
+    },
+    {
+      "id": "off-2",
+      "churchId": "admin-initial",
+      "title": "Church Clerk",
+      "department": "Secretariat & Records",
+      "officerName": "Sister Chanda",
+      "contact": "+260 977 333444",
+      "email": "clerk@church.org",
+      "termYear": "2026 - 2027",
+      "isChair": false,
+      "committeeName": "Secretariat & Communications"
+    },
+    {
+      "id": "off-3",
+      "churchId": "admin-initial",
+      "title": "Church Treasurer",
+      "department": "Treasury & Finance",
+      "officerName": "Brother Mwale",
+      "contact": "+260 977 555666",
+      "email": "treasurer@church.org",
+      "termYear": "2026 - 2027",
+      "isChair": true,
+      "committeeName": "Finance Committee"
+    },
+    {
+      "id": "off-4",
+      "churchId": "admin-initial",
+      "title": "Head Deacon",
+      "department": "Deaconry",
+      "officerName": "Brother B. Zulu",
+      "contact": "+260 977 777888",
+      "email": "deacons@church.org",
+      "termYear": "2026 - 2027",
+      "isChair": true,
+      "committeeName": "Deacons Council"
+    },
+    {
+      "id": "off-5",
+      "churchId": "admin-initial",
+      "title": "Head Deaconess",
+      "department": "Deaconry",
+      "officerName": "Sister M. Kalunga",
+      "contact": "+260 977 999000",
+      "email": "deaconesses@church.org",
+      "termYear": "2026 - 2027",
+      "isChair": true,
+      "committeeName": "Deaconesses Council"
+    },
+    {
+      "id": "off-6",
+      "churchId": "admin-initial",
+      "title": "Sabbath School Superintendent",
+      "department": "Sabbath School",
+      "officerName": "Sister R. Simpasa",
+      "contact": "+260 966 112233",
+      "email": "sabbathschool@church.org",
+      "termYear": "2026 - 2027",
+      "isChair": true,
+      "committeeName": "Sabbath School Council"
+    },
+    {
+      "id": "off-7",
+      "churchId": "admin-initial",
+      "title": "Personal Ministries Leader",
+      "department": "Evangelism & Outreach",
+      "officerName": "Elder P. Banda",
+      "contact": "+260 966 445566",
+      "email": "evangelism@church.org",
+      "termYear": "2026 - 2027",
+      "isChair": true,
+      "committeeName": "Evangelism Council"
+    },
+    {
+      "id": "off-8",
+      "churchId": "admin-initial",
+      "title": "Adventist Youth (AY) Director",
+      "department": "Youth Ministries",
+      "officerName": "Brother K. Mutale",
+      "contact": "+260 955 778899",
+      "email": "youth@church.org",
+      "termYear": "2026 - 2027",
+      "isChair": true,
+      "committeeName": "AY Council"
+    }
+  ],
+  "treasurers": [
+    {
+      "id": "treasurer-1",
+      "name": "Elder Joseph Banda",
+      "email": "treasurer@church.org",
+      "password": "treasurer123",
+      "role": "TREASURER",
+      "churchName": "Woodlands SDA Church"
+    }
+  ],
+  "superintendents": [
+    {
+      "id": "superintendent-1",
+      "name": "Sister R. Simpasa",
+      "email": "superintendent@church.org",
+      "password": "superintendent123",
+      "role": "SUPERINTENDENT",
+      "churchName": "Woodlands SDA Church"
+    }
+  ],
+  "bankAccounts": [
+    {
+      "id": "bank-1",
+      "churchId": "admin-initial",
+      "accountName": "Woodlands Seventh-day Adventist Church - General Operating Account",
+      "accountNumber": "028194820192",
+      "bankName": "Standard Chartered Bank",
+      "branchName": "Kabulonga Branch",
+      "accountType": "operating_checking",
+      "currentBalance": 14850.5,
+      "isExclusiveChurchAccount": true,
+      "signatories": [
+        "Elder Joseph Banda (Treasurer)",
+        "Dr. Hastings Phiri (First Elder)",
+        "Pastor Chimuka"
+      ],
+      "lastReconciledDate": "2026-08-31",
+      "reconciledBookBalance": 14850.5,
+      "status": "active"
+    },
+    {
+      "id": "bank-2",
+      "churchId": "admin-initial",
+      "accountName": "Woodlands SDA Church - Sanctuary Expansion Building Fund (Savings)",
+      "accountNumber": "039918239014",
+      "bankName": "Zambia National Commercial Bank (Zanaco)",
+      "branchName": "Corporate Branch",
+      "accountType": "authorized_savings",
+      "boardAuthRef": "MIN-2025-11-04 (Voted Church Board Minute: High-Yield Building Reserve)",
+      "currentBalance": 52400,
+      "isExclusiveChurchAccount": true,
+      "signatories": [
+        "Elder Joseph Banda (Treasurer)",
+        "Dr. Hastings Phiri (First Elder)"
+      ],
+      "lastReconciledDate": "2026-08-31",
+      "reconciledBookBalance": 52400,
+      "status": "active"
+    }
+  ],
+  "remittances": [
+    {
+      "id": "remit-2026-07",
+      "churchId": "admin-initial",
+      "monthYear": "2026-07",
+      "remittanceNumber": "REM-CONF-2026-07",
+      "dateRemitted": "2026-07-31",
+      "titheAmount": 18450,
+      "regularMissionAmount": 3200,
+      "thirteenthSabbathAmount": 1650,
+      "birthdayThankAmount": 480,
+      "missionInvestmentAmount": 920,
+      "specialConferenceProjectsAmount": 1200,
+      "totalRemittance": 25900,
+      "conferenceTreasurerName": "Elder M. S. Katulwende (Conference Treasurer)",
+      "conferenceReceiptNumber": "CR-LUS-2026-7841",
+      "bankTransferRef": "EFT-SCB-99812491",
+      "nonDiversionPledgeConfirmed": true,
+      "status": "remitted_acknowledged"
+    },
+    {
+      "id": "remit-2026-08",
+      "churchId": "admin-initial",
+      "monthYear": "2026-08",
+      "remittanceNumber": "REM-CONF-2026-08",
+      "dateRemitted": "2026-08-31",
+      "titheAmount": 19820,
+      "regularMissionAmount": 3450,
+      "thirteenthSabbathAmount": 1820,
+      "birthdayThankAmount": 510,
+      "missionInvestmentAmount": 1050,
+      "specialConferenceProjectsAmount": 1400,
+      "totalRemittance": 28050,
+      "conferenceTreasurerName": "Elder M. S. Katulwende (Conference Treasurer)",
+      "conferenceReceiptNumber": "CR-LUS-2026-8219",
+      "bankTransferRef": "EFT-SCB-99931820",
+      "nonDiversionPledgeConfirmed": true,
+      "status": "remitted_acknowledged"
+    }
+  ],
+  "ssTransmissions": [
+    {
+      "id": "ss-trans-1",
+      "churchId": "admin-initial",
+      "receiptNumber": "SSR-2026-0829",
+      "date": "2026-08-29",
+      "secretaryName": "Sister Mwamba (SS Secretary)",
+      "treasurerName": "Elder Joseph Banda (Treasurer)",
+      "regularMissionOffering": 840,
+      "thirteenthSabbathOffering": 420,
+      "birthdayThankOffering": 160,
+      "missionInvestment": 280,
+      "sabbathSchoolExpense": 110,
+      "totalMissionAmount": 1700,
+      "acknowledgedReceiptGiven": true,
+      "status": "remitted"
+    },
+    {
+      "id": "ss-trans-2",
+      "churchId": "admin-initial",
+      "receiptNumber": "SSR-2026-0822",
+      "date": "2026-08-22",
+      "secretaryName": "Sister Mwamba (SS Secretary)",
+      "treasurerName": "Elder Joseph Banda (Treasurer)",
+      "regularMissionOffering": 780,
+      "thirteenthSabbathOffering": 310,
+      "birthdayThankOffering": 90,
+      "missionInvestment": 210,
+      "sabbathSchoolExpense": 95,
+      "totalMissionAmount": 1390,
+      "acknowledgedReceiptGiven": true,
+      "status": "remitted"
+    }
+  ],
+  "disbursements": [
+    {
+      "id": "disb-1",
+      "churchId": "admin-initial",
+      "voucherNumber": "DIS-2026-0112",
+      "date": "2026-08-18",
+      "payee": "ZESCO Power Corporation",
+      "fundCategory": "local_church",
+      "fundName": "Church Operating Budget - Utilities",
+      "amount": 980,
+      "boardMinuteRef": "MIN-2026-07-08 (Standing Utility Authorization)",
+      "authorizedBy": "Dr. Hastings Phiri (Board Chair)",
+      "billVoucherAttached": true,
+      "paymentMethod": "bank_transfer",
+      "checkOrRefNumber": "FT-9941824",
+      "description": "Monthly electricity bill for church main auditorium and youth hall.",
+      "status": "receipt_attached"
+    },
+    {
+      "id": "disb-2",
+      "churchId": "admin-initial",
+      "voucherNumber": "DIS-2026-0113",
+      "date": "2026-08-24",
+      "payee": "Ruth Bwalya (AYM Youth Leader)",
+      "fundCategory": "auxiliary",
+      "fundName": "Adventist Youth Ministries (AYM)",
+      "amount": 650,
+      "boardMinuteRef": "AYM Executive Order #2026-04",
+      "authorizedBy": "Ruth Bwalya (AYM Leader)",
+      "auxiliaryOrderSigned": true,
+      "billVoucherAttached": true,
+      "receiptIssuedToDepartment": true,
+      "paymentMethod": "bank_transfer",
+      "checkOrRefNumber": "FT-9948831",
+      "description": "Procurement of youth camp meeting literature, badges, and first aid kit.",
+      "status": "receipt_attached"
+    },
+    {
+      "id": "disb-3",
+      "churchId": "admin-initial",
+      "voucherNumber": "DIS-2026-0114",
+      "date": "2026-08-28",
+      "payee": "Grace Tembo (Dorcas Secretary)",
+      "fundCategory": "auxiliary",
+      "fundName": "Dorcas Society & Community Services",
+      "amount": 400,
+      "boardMinuteRef": "Dorcas Executive Committee Vote #D-12",
+      "authorizedBy": "Grace Tembo (Dorcas Leader)",
+      "auxiliaryOrderSigned": true,
+      "billVoucherAttached": true,
+      "receiptIssuedToDepartment": true,
+      "paymentMethod": "petty_cash",
+      "checkOrRefNumber": "PC-2026-039",
+      "description": "Emergency food relief hampers (mealie meal, cooking oil) for vulnerable families.",
+      "status": "receipt_attached"
+    }
+  ],
+  "auxiliaryDepartments": [
+    {
+      "id": "aux-1",
+      "churchId": "admin-initial",
+      "name": "Adventist Youth Ministries (AYM)",
+      "leaderName": "Ruth Bwalya",
+      "secretaryName": "Chileshe Mwape",
+      "currentBalance": 3420,
+      "trustRuleConfirmed": true
+    },
+    {
+      "id": "aux-2",
+      "churchId": "admin-initial",
+      "name": "Dorcas Society & Community Services",
+      "leaderName": "Grace Tembo",
+      "secretaryName": "Evelyn Mwale",
+      "currentBalance": 2150,
+      "trustRuleConfirmed": true
+    },
+    {
+      "id": "aux-3",
+      "churchId": "admin-initial",
+      "name": "Family Life Ministries",
+      "leaderName": "Elder David Mwale",
+      "secretaryName": "Sarah Mwale",
+      "currentBalance": 1800,
+      "trustRuleConfirmed": true
+    },
+    {
+      "id": "aux-4",
+      "churchId": "admin-initial",
+      "name": "Pathfinders & Adventurers Club",
+      "leaderName": "James Banda",
+      "secretaryName": "Mary Zulu",
+      "currentBalance": 2950,
+      "trustRuleConfirmed": true
+    },
+    {
+      "id": "aux-5",
+      "churchId": "admin-initial",
+      "name": "Music & Church Choir",
+      "leaderName": "Emmanuel Sakala",
+      "secretaryName": "Beatrice Lungu",
+      "currentBalance": 1240,
+      "trustRuleConfirmed": true
+    }
+  ],
+  "envelopes": [
+    {
+      "id": "env-1",
+      "churchId": "admin-initial",
+      "receiptNumber": "REC-2026-0841",
+      "envelopeNumber": "ENV-104",
+      "donorType": "member",
+      "memberId": "mem-1",
+      "donorName": "David Mwale",
+      "date": "2026-08-29",
+      "paymentMethod": "cash_envelope",
+      "items": [
+        {
+          "id": "item-1",
+          "category": "conference_trust",
+          "fundName": "Tithe (Conference Trust)",
+          "amount": 1500
+        },
+        {
+          "id": "item-2",
+          "category": "conference_trust",
+          "fundName": "Regular World Mission Offering",
+          "amount": 200
+        },
+        {
+          "id": "item-3",
+          "category": "local_church",
+          "fundName": "Local Church Operating Budget",
+          "amount": 300
+        },
+        {
+          "id": "item-4",
+          "category": "local_church",
+          "fundName": "Sanctuary Building Fund",
+          "amount": 250
+        }
+      ],
+      "totalAmount": 2250,
+      "isConfidential": true,
+      "issuedReceipt": true,
+      "receivedBy": "Elder Joseph Banda"
+    },
+    {
+      "id": "env-1b",
+      "churchId": "admin-initial",
+      "receiptNumber": "REC-2026-0902",
+      "envelopeNumber": "ENV-104",
+      "donorType": "member",
+      "memberId": "mem-1",
+      "donorName": "David Mwale",
+      "date": "2026-09-05",
+      "paymentMethod": "bank_transfer",
+      "checkOrRefNumber": "TX-ZMW-94821",
+      "items": [
+        {
+          "id": "item-1b1",
+          "category": "conference_trust",
+          "fundName": "Tithe (Conference Trust)",
+          "amount": 1500
+        },
+        {
+          "id": "item-1b2",
+          "category": "local_church",
+          "fundName": "Local Church Operating Budget",
+          "amount": 350
+        },
+        {
+          "id": "item-1b3",
+          "category": "local_church",
+          "fundName": "Sanctuary Building Fund",
+          "amount": 300
+        },
+        {
+          "id": "item-1b4",
+          "category": "conference_trust",
+          "fundName": "Thirteenth Sabbath Offering",
+          "amount": 100
+        }
+      ],
+      "totalAmount": 2250,
+      "isConfidential": true,
+      "issuedReceipt": true,
+      "receivedBy": "Elder Joseph Banda"
+    },
+    {
+      "id": "env-1c",
+      "churchId": "admin-initial",
+      "receiptNumber": "REC-2026-0715",
+      "envelopeNumber": "ENV-104",
+      "donorType": "member",
+      "memberId": "mem-1",
+      "donorName": "David Mwale",
+      "date": "2026-07-18",
+      "paymentMethod": "cash_envelope",
+      "items": [
+        {
+          "id": "item-1c1",
+          "category": "conference_trust",
+          "fundName": "Tithe (Conference Trust)",
+          "amount": 1500
+        },
+        {
+          "id": "item-1c2",
+          "category": "local_church",
+          "fundName": "Local Church Operating Budget",
+          "amount": 250
+        },
+        {
+          "id": "item-1c3",
+          "category": "auxiliary",
+          "fundName": "Family Life Ministries",
+          "amount": 150
+        }
+      ],
+      "totalAmount": 1900,
+      "isConfidential": true,
+      "issuedReceipt": true,
+      "receivedBy": "Elder Joseph Banda"
+    },
+    {
+      "id": "env-1d",
+      "churchId": "admin-initial",
+      "receiptNumber": "REC-2025-1120",
+      "envelopeNumber": "ENV-104",
+      "donorType": "member",
+      "memberId": "mem-1",
+      "donorName": "David Mwale",
+      "date": "2025-11-29",
+      "paymentMethod": "cash_envelope",
+      "items": [
+        {
+          "id": "item-1d1",
+          "category": "conference_trust",
+          "fundName": "Tithe (Conference Trust)",
+          "amount": 1400
+        },
+        {
+          "id": "item-1d2",
+          "category": "local_church",
+          "fundName": "Local Church Operating Budget",
+          "amount": 200
+        }
+      ],
+      "totalAmount": 1600,
+      "isConfidential": true,
+      "issuedReceipt": true,
+      "receivedBy": "Elder Joseph Banda"
+    },
+    {
+      "id": "env-2",
+      "churchId": "admin-initial",
+      "receiptNumber": "REC-2026-0842",
+      "envelopeNumber": "ENV-118",
+      "donorType": "member",
+      "memberId": "mem-4",
+      "donorName": "Carlos Gómez Morales",
+      "date": "2026-08-29",
+      "paymentMethod": "conference_egiving",
+      "checkOrRefNumber": "EGV-98214-ZAM",
+      "items": [
+        {
+          "id": "item-5",
+          "category": "conference_trust",
+          "fundName": "Tithe (Conference Trust)",
+          "amount": 2100
+        },
+        {
+          "id": "item-6",
+          "category": "conference_trust",
+          "fundName": "Thirteenth Sabbath Offering",
+          "amount": 150
+        },
+        {
+          "id": "item-7",
+          "category": "local_church",
+          "fundName": "Local Church Operating Budget",
+          "amount": 400
+        },
+        {
+          "id": "item-8",
+          "category": "auxiliary",
+          "fundName": "Adventist Youth Ministries (AYM)",
+          "amount": 100
+        }
+      ],
+      "totalAmount": 2750,
+      "isConfidential": true,
+      "issuedReceipt": true,
+      "receivedBy": "Elder Joseph Banda"
+    },
+    {
+      "id": "env-2b",
+      "churchId": "admin-initial",
+      "receiptNumber": "REC-2026-0903",
+      "envelopeNumber": "ENV-118",
+      "donorType": "member",
+      "memberId": "mem-4",
+      "donorName": "Carlos Gómez Morales",
+      "date": "2026-09-05",
+      "paymentMethod": "conference_egiving",
+      "checkOrRefNumber": "EGV-99411-ZAM",
+      "items": [
+        {
+          "id": "item-2b1",
+          "category": "conference_trust",
+          "fundName": "Tithe (Conference Trust)",
+          "amount": 2100
+        },
+        {
+          "id": "item-2b2",
+          "category": "local_church",
+          "fundName": "Local Church Operating Budget",
+          "amount": 500
+        },
+        {
+          "id": "item-2b3",
+          "category": "local_church",
+          "fundName": "Sanctuary Building Fund",
+          "amount": 300
+        }
+      ],
+      "totalAmount": 2900,
+      "isConfidential": true,
+      "issuedReceipt": true,
+      "receivedBy": "Elder Joseph Banda"
+    },
+    {
+      "id": "env-3",
+      "churchId": "admin-initial",
+      "receiptNumber": "REC-2026-0843",
+      "envelopeNumber": "ENV-142",
+      "donorType": "member",
+      "memberId": "mem-7",
+      "donorName": "Alice Walker",
+      "date": "2026-08-29",
+      "paymentMethod": "cash_envelope",
+      "items": [
+        {
+          "id": "item-9",
+          "category": "conference_trust",
+          "fundName": "Tithe (Conference Trust)",
+          "amount": 800
+        },
+        {
+          "id": "item-10",
+          "category": "conference_trust",
+          "fundName": "Birthday-Thank Offering",
+          "amount": 50
+        },
+        {
+          "id": "item-11",
+          "category": "local_church",
+          "fundName": "Needy / Poor Benevolent Fund",
+          "amount": 150
+        },
+        {
+          "id": "item-12",
+          "category": "auxiliary",
+          "fundName": "Dorcas Society & Community Services",
+          "amount": 100
+        }
+      ],
+      "totalAmount": 1100,
+      "isConfidential": true,
+      "issuedReceipt": true,
+      "receivedBy": "Elder Joseph Banda"
+    },
+    {
+      "id": "env-4",
+      "churchId": "admin-initial",
+      "receiptNumber": "REC-2026-0904",
+      "envelopeNumber": "ENV-156",
+      "donorType": "member",
+      "memberId": "mem-2",
+      "donorName": "Grace Musonda Mwale",
+      "date": "2026-09-05",
+      "paymentMethod": "cash_envelope",
+      "items": [
+        {
+          "id": "item-13",
+          "category": "conference_trust",
+          "fundName": "Tithe (Conference Trust)",
+          "amount": 1200
+        },
+        {
+          "id": "item-14",
+          "category": "local_church",
+          "fundName": "Local Church Operating Budget",
+          "amount": 200
+        },
+        {
+          "id": "item-15",
+          "category": "local_church",
+          "fundName": "Sanctuary Building Fund",
+          "amount": 200
+        },
+        {
+          "id": "item-16",
+          "category": "auxiliary",
+          "fundName": "Dorcas Society & Community Services",
+          "amount": 100
+        }
+      ],
+      "totalAmount": 1700,
+      "isConfidential": true,
+      "issuedReceipt": true,
+      "receivedBy": "Elder Joseph Banda"
+    }
+  ],
+  "looseOfferings": [
+    {
+      "id": "loose-1",
+      "churchId": "admin-initial",
+      "receiptNumber": "LSE-2026-0829",
+      "date": "2026-08-29",
+      "serviceType": "Divine Service",
+      "treasurerName": "Elder Joseph Banda",
+      "secondOfficerName": "Deacon Charles Zulu",
+      "secondOfficerRole": "Deacon",
+      "denominationBreakdown": {
+        "bills100": 18,
+        "bills50": 24,
+        "bills20": 35,
+        "bills10": 42,
+        "bills5": 28,
+        "coins": 65
+      },
+      "totalAmount": 4325,
+      "targetFund": "Local Church Budget (Combined Offering Plan)",
+      "isSignedByBoth": true,
+      "deaconReceiptIssued": true,
+      "notes": "Counted together in treasury room immediately after divine service benediction."
+    }
+  ],
+  "literatureOrders": [
+    {
+      "id": "lit-1",
+      "churchId": "admin-initial",
+      "orderNumber": "ABC-2026-042",
+      "orderDate": "2026-08-15",
+      "memberOrDepartmentName": "Sabbath School Department",
+      "itemsDescription": "Adult Sabbath School Lesson Quarterlies Q4 (40 copies Standard, 10 copies Teacher Edition)",
+      "amountCollected": 1250,
+      "remittedToAbcDate": "2026-08-19",
+      "abcInvoiceRef": "INV-ABC-9418",
+      "paymentMethod": "transfer",
+      "status": "delivered"
+    },
+    {
+      "id": "lit-2",
+      "churchId": "admin-initial",
+      "orderNumber": "ABC-2026-043",
+      "orderDate": "2026-08-25",
+      "memberOrDepartmentName": "Family Life & Individual Members",
+      "itemsDescription": "5x The Adventist Home, 3x Messages to Young People, 12x 2027 Daily Devotionals",
+      "amountCollected": 890,
+      "remittedToAbcDate": "2026-08-28",
+      "abcInvoiceRef": "INV-ABC-9502",
+      "paymentMethod": "transfer",
+      "status": "remitted_to_abc"
+    }
+  ],
+  "auditRecords": [
+    {
+      "id": "audit-2025",
+      "churchId": "admin-initial",
+      "year": 2025,
+      "auditorName": "P. Kangwa, ACCA (Conference Auditor)",
+      "auditDate": "2026-03-14",
+      "auditScope": "Full annual financial audit of all Church, Auxiliary, and Conference trust funds for fiscal year 2025.",
+      "controlledInspectionLogs": [
+        {
+          "date": "2026-08-10",
+          "inspectorName": "Pastor Chimuka",
+          "inspectorRole": "Pastor",
+          "purpose": "Mid-year financial statement and auxiliary fund review prior to Board meeting."
+        },
+        {
+          "date": "2026-07-15",
+          "inspectorName": "Dr. Hastings Phiri",
+          "inspectorRole": "First Elder",
+          "purpose": "Routine inspection of bank reconciliation and trust fund remittance vouchers."
+        }
+      ],
+      "findingsSummary": "Records maintained with exceptional fidelity to the SDA Church Manual. 100% of Conference trust funds remitted strictly monthly. Dual-counting loose offering sheets properly co-signed. Auxiliary ledgers strictly segregated.",
+      "status": "certified_clean",
+      "auditOpinion": "clean_unqualified",
+      "conferenceName": "Lusaka Conference of SDA",
+      "officialLetterPreserved": true
+    }
+  ],
+  "studyGuideOrders": [
+    {
+      "id": "sgo-1",
+      "churchId": "admin-initial",
+      "orderNumber": "SGO-2026-001",
+      "orderDate": "2026-08-20",
+      "memberId": "mem-1",
+      "memberName": "Elder Musonda",
+      "memberContact": "+260 977 111222",
+      "memberEmail": "musonda@church.org",
+      "guideType": "Adult Teachers Edition",
+      "quarter": "Q4 2026",
+      "quantity": 2,
+      "unitPrice": 50,
+      "totalAmount": 100,
+      "paymentStatus": "paid",
+      "amountPaid": 100,
+      "paymentMethod": "Mobile Money",
+      "paymentDate": "2026-08-20",
+      "orderStatus": "distributed",
+      "distributedDate": "2026-09-05",
+      "notes": "Personal copy and one for assistant teacher.",
+      "takenBySuperintendent": "Sister R. Simpasa"
+    },
+    {
+      "id": "sgo-2",
+      "churchId": "admin-initial",
+      "orderNumber": "SGO-2026-002",
+      "orderDate": "2026-08-24",
+      "memberId": "mem-2",
+      "memberName": "Sister Chanda",
+      "memberContact": "+260 977 333444",
+      "guideType": "Cornerstones / Youth",
+      "quarter": "Q4 2026",
+      "quantity": 3,
+      "unitPrice": 35,
+      "totalAmount": 105,
+      "paymentStatus": "paid",
+      "amountPaid": 105,
+      "paymentMethod": "Cash",
+      "paymentDate": "2026-08-24",
+      "orderStatus": "received_from_abc",
+      "notes": "For youth class facilitators at next quarter kickoff.",
+      "takenBySuperintendent": "Sister R. Simpasa"
+    },
+    {
+      "id": "sgo-3",
+      "churchId": "admin-initial",
+      "orderNumber": "SGO-2026-003",
+      "orderDate": "2026-08-29",
+      "memberId": "mem-7",
+      "memberName": "Alice Walker",
+      "memberContact": "+260 955 456789",
+      "memberEmail": "alice.walker@adventist.org",
+      "guideType": "Adult Large Print",
+      "quarter": "Q4 2026",
+      "quantity": 2,
+      "unitPrice": 45,
+      "totalAmount": 90,
+      "paymentStatus": "paid",
+      "amountPaid": 90,
+      "paymentMethod": "SS Envelope",
+      "paymentDate": "2026-08-29",
+      "orderStatus": "placed",
+      "notes": "Special request: large font print for senior family members.",
+      "takenBySuperintendent": "Sister R. Simpasa"
+    },
+    {
+      "id": "sgo-4",
+      "churchId": "admin-initial",
+      "orderNumber": "SGO-2026-004",
+      "orderDate": "2026-09-02",
+      "memberId": "mem-9",
+      "memberName": "Ruth Bwalya",
+      "memberContact": "+260 965 222333",
+      "memberEmail": "ruth.bwalya@adventist.org",
+      "guideType": "Collegiate / Young Adult",
+      "quarter": "Q4 2026",
+      "quantity": 1,
+      "unitPrice": 35,
+      "totalAmount": 35,
+      "paymentStatus": "pending",
+      "amountPaid": 0,
+      "orderStatus": "placed",
+      "notes": "Will pay via Airtel Money this Sabbath.",
+      "takenBySuperintendent": "Sister R. Simpasa"
+    },
+    {
+      "id": "sgo-5",
+      "churchId": "admin-initial",
+      "orderNumber": "SGO-2026-005",
+      "orderDate": "2026-09-04",
+      "memberName": "Brother Chilufya Tembo",
+      "memberContact": "+260 976 543210",
+      "guideType": "Primary",
+      "quarter": "Q4 2026",
+      "quantity": 2,
+      "unitPrice": 30,
+      "totalAmount": 60,
+      "paymentStatus": "paid",
+      "amountPaid": 60,
+      "paymentMethod": "Cash",
+      "paymentDate": "2026-09-04",
+      "orderStatus": "received_from_abc",
+      "notes": "Primary lesson quarterly for two children in Grade 3 and 4.",
+      "takenBySuperintendent": "Sister R. Simpasa"
+    },
+    {
+      "id": "sgo-6",
+      "churchId": "admin-initial",
+      "orderNumber": "SGO-2026-006",
+      "orderDate": "2026-09-05",
+      "memberId": "mem-4",
+      "memberName": "Carlos Gómez Morales",
+      "memberContact": "+260 966 987654",
+      "guideType": "Ellen White Companion Book",
+      "quarter": "Q4 2026",
+      "quantity": 1,
+      "unitPrice": 65,
+      "totalAmount": 65,
+      "paymentStatus": "paid",
+      "amountPaid": 65,
+      "paymentMethod": "Bank Transfer",
+      "paymentDate": "2026-09-05",
+      "orderStatus": "placed",
+      "notes": "EGW Sabbath School Quarterly Companion volume.",
+      "takenBySuperintendent": "Sister R. Simpasa"
+    }
+  ]
+}

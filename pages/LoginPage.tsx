@@ -373,8 +373,16 @@ const LoginPage: React.FC<LoginPageProps> = ({
       ...admins,
       ...extraClerks,
       ...teachers,
+      { id: 'superadmin_001', name: 'Elder Dr. G. T. Ngwira', email: 'superadmin@sda.org', password: 'admin123', role: Role.SUPER_ADMIN },
       { id: 'conf_admin_001', name: 'Elder Mutale', email: 'conference@church.com', password: 'password123', role: Role.CONFERENCE_ADMIN },
-      { id: 'dist_admin_001', name: 'Pastor Phiri', email: 'district@church.com', password: 'password123', role: Role.DISTRICT_ADMIN, districtId: 'dist_001' }
+      { id: 'conf_pres_001', name: 'Pastor Dr. Harrington Simpasa', email: 'president@conference.org', password: 'president123', role: Role.CONFERENCE_PRESIDENT },
+      { id: 'dist_admin_001', name: 'Pastor Phiri', email: 'district@church.com', password: 'password123', role: Role.DISTRICT_ADMIN, districtId: 'dist_001' },
+      { id: 'dist_pastor_001', name: 'Pastor Kelvin Mwale', email: 'pastor@district.org', password: 'pastor123', role: Role.DISTRICT_PASTOR, districtId: 'dist_001' },
+      { id: 'elder_001', name: 'Elder M. S. Banda', email: 'elder@church.org', password: 'elder123', role: Role.CHURCH_ADMIN, churchName: 'Woodlands SDA Church', churchId: 'church-woodlands' },
+      { id: 'treasurer_001', name: 'Elder Joseph Banda', email: 'treasurer@church.org', password: 'treasurer123', role: Role.TREASURER, churchName: 'Woodlands SDA Church', churchId: 'church-woodlands' },
+      { id: 'superintendent_001', name: 'Sister R. Simpasa', email: 'superintendent@church.org', password: 'superintendent123', role: Role.SUPERINTENDENT, churchName: 'Woodlands SDA Church', churchId: 'church-woodlands' },
+      { id: 'clerk_demo_001', name: 'Sister P. Tembo', email: 'clerk@church.org', password: 'clerk123', role: Role.CLERK, churchName: 'Woodlands SDA Church', churchId: 'church-woodlands' },
+      { id: 'teacher_demo_001', name: 'Elder Musonda', email: 'musonda@church.org', password: 'password123', role: Role.TEACHER, churchName: 'Woodlands SDA Church', churchId: 'church-woodlands', assignedClass: 'c1' }
     ];
 
     const match = allLocalUsers.find(
@@ -537,29 +545,57 @@ const LoginPage: React.FC<LoginPageProps> = ({
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
               <button
                 type="button"
-                onClick={() => fillDemoAccount('conference@church.com')}
-                className="bg-purple-950/60 border border-purple-500/40 hover:border-purple-400 text-purple-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5"
+                onClick={() => fillDemoAccount('superadmin@sda.org', 'admin123')}
+                className="bg-purple-950/70 border border-purple-500/50 hover:border-purple-300 text-purple-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5"
               >
-                🏛️ Conference Admin
+                🛡️ Super Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => fillDemoAccount('conference@church.com')}
+                className="bg-indigo-950/60 border border-indigo-500/40 hover:border-indigo-400 text-indigo-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5"
+              >
+                🏛️ Conference
               </button>
               <button
                 type="button"
                 onClick={() => fillDemoAccount('district@church.com')}
-                className="bg-indigo-950/60 border border-indigo-500/40 hover:border-indigo-400 text-indigo-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5"
+                className="bg-teal-950/60 border border-teal-500/40 hover:border-teal-400 text-teal-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5"
               >
-                🏢 District Admin
+                🏢 District
+              </button>
+              <button
+                type="button"
+                onClick={() => fillDemoAccount('elder@church.org', 'elder123')}
+                className="bg-amber-950/70 border border-amber-500/50 hover:border-amber-300 text-amber-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5"
+              >
+                ⛪ First Elder (Admin)
               </button>
               <button
                 type="button"
                 onClick={() => fillDemoAccount('clerk@church.com')}
                 className="bg-blue-950/60 border border-blue-500/40 hover:border-blue-400 text-blue-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5"
               >
-                ⛪ Church Clerk
+                📋 Church Clerk
+              </button>
+              <button
+                type="button"
+                onClick={() => fillDemoAccount('treasurer@church.org', 'treasurer123')}
+                className="bg-emerald-950/70 border border-emerald-500/50 hover:border-emerald-300 text-emerald-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5"
+              >
+                💰 Treasurer
+              </button>
+              <button
+                type="button"
+                onClick={() => fillDemoAccount('superintendent@church.org', 'superintendent123')}
+                className="bg-sky-950/70 border border-sky-500/50 hover:border-sky-300 text-sky-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5"
+              >
+                📜 Superintendent
               </button>
               <button
                 type="button"
                 onClick={() => fillDemoAccount('john@church.com')}
-                className="bg-amber-950/60 border border-amber-500/40 hover:border-amber-400 text-amber-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5"
+                className="bg-slate-900/80 border border-slate-600 hover:border-amber-400 text-amber-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5"
               >
                 📖 SS Teacher
               </button>

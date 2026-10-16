@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `name` VARCHAR(100) NOT NULL,
   `email` VARCHAR(100) NOT NULL,
   `password` VARCHAR(255) NOT NULL,
-  `role` ENUM('CONFERENCE_ADMIN', 'DISTRICT_ADMIN', 'CLERK', 'TEACHER', 'VIEWER') NOT NULL DEFAULT 'TEACHER',
+  `role` ENUM('SUPER_ADMIN', 'CONFERENCE_ADMIN', 'CONFERENCE_PRESIDENT', 'DISTRICT_ADMIN', 'DISTRICT_PASTOR', 'CHURCH_ADMIN', 'CLERK', 'TEACHER', 'TREASURER', 'SUPERINTENDENT', 'VIEWER') NOT NULL DEFAULT 'TEACHER',
   `assignedClass` VARCHAR(50) DEFAULT NULL,
   `language` VARCHAR(50) DEFAULT NULL,
   `churchName` VARCHAR(100) DEFAULT NULL,
@@ -316,10 +316,20 @@ INSERT IGNORE INTO `churches` (`id`, `church_name`, `districtId`, `province`, `l
 
 -- Users (Hashed password for 'password123' is $2b$10$YourHashedPasswordHere. Let's seed with plain password or bcrypt equivalent. Since server logic supports plain fallback, we seed with plain passwords to ensure easy login check!)
 INSERT IGNORE INTO `users` (`id`, `name`, `email`, `password`, `role`, `assignedClass`, `language`, `churchName`, `churchId`, `districtId`, `conferenceId`) VALUES
--- Conference Admin
+-- Super Admin
+('superadmin_001', 'Elder Dr. G. T. Ngwira', 'superadmin@sda.org', 'admin123', 'SUPER_ADMIN', NULL, 'English', NULL, NULL, NULL, NULL),
+-- Conference President & Admin
 ('conf_admin_001', 'Elder Mutale', 'conference@church.com', 'password123', 'CONFERENCE_ADMIN', NULL, 'English', NULL, NULL, NULL, 'conf_001'),
--- District Admin
+('conf_pres_001', 'Pastor Dr. Harrington Simpasa', 'president@conference.org', 'president123', 'CONFERENCE_PRESIDENT', NULL, 'English', NULL, NULL, NULL, 'conf_001'),
+-- District Pastor & Admin
 ('dist_admin_001', 'Pastor Phiri', 'district@church.com', 'password123', 'DISTRICT_ADMIN', NULL, 'English', NULL, NULL, 'dist_001', NULL),
+('dist_pastor_001', 'Pastor Kelvin Mwale', 'pastor@district.org', 'pastor123', 'DISTRICT_PASTOR', NULL, 'English', NULL, NULL, 'dist_001', NULL),
+-- Church Admin / First Elder
+('elder_001', 'Elder M. S. Banda', 'elder@church.org', 'elder123', 'CHURCH_ADMIN', NULL, 'English', 'Central SDA Church', 'church_001', 'dist_001', 'conf_001'),
+-- Church Treasurer
+('treasurer_001', 'Elder Joseph Banda', 'treasurer@church.org', 'treasurer123', 'TREASURER', NULL, 'English', 'Central SDA Church', 'church_001', 'dist_001', 'conf_001'),
+-- Sabbath School Superintendent
+('superintendent_001', 'Sister R. Simpasa', 'superintendent@church.org', 'superintendent123', 'SUPERINTENDENT', NULL, 'English', 'Central SDA Church', 'church_001', 'dist_001', 'conf_001'),
 -- Clerks
 ('clerk_001', 'Sarah Miller', 'clerk@church.com', 'password123', 'CLERK', NULL, 'English', 'Central SDA Church', 'church_001', 'dist_001', 'conf_001'),
 ('clerk_002', 'David Wilson', 'david@church.com', 'password123', 'CLERK', NULL, 'English', 'Northside SDA Church', 'church_002', 'dist_001', 'conf_001'),

@@ -1,8 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Users, BookOpen, Bell, Calendar, DollarSign, Mail, Plus, Trash2, Edit3, Sparkles, CheckCircle, XCircle, ChevronDown, LayoutDashboard, Eye, X, Save, RefreshCw, Send, Lock, ChurchIcon, AlertCircle, AlertTriangle } from 'lucide-react';
+import { Users, BookOpen, Bell, Calendar, DollarSign, Mail, Plus, Trash2, Edit3, Sparkles, CheckCircle, XCircle, ChevronDown, LayoutDashboard, Eye, X, Save, RefreshCw, Send, Lock, ChurchIcon, AlertCircle, AlertTriangle, Home, ArrowRightLeft, Building2, FileText, Globe } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
-import { User, Class, Announcement, AttendanceRecord, Offerings, Role } from '../types.ts';
+import { User, Class, Announcement, AttendanceRecord, Offerings, Role, ChurchMember, FamilyUnit, TransferRequest, ChurchMeeting, ChurchOfficer } from '../types.ts';
+import { FamilyUnitsView } from '../components/clerk/FamilyUnitsView.tsx';
+import { TransfersPipelineView } from '../components/clerk/TransfersPipelineView.tsx';
+import { GovernanceMeetingsView } from '../components/clerk/GovernanceMeetingsView.tsx';
+import { DocumentGeneratorView } from '../components/clerk/DocumentGeneratorView.tsx';
+import { ConferenceSyncView } from '../components/clerk/ConferenceSyncView.tsx';
 
 interface ClerkDashboardProps {
   teachers: User[];
@@ -21,6 +26,27 @@ interface ClerkDashboardProps {
   resolveResetRequest: (id: string) => void;
   offerings: Offerings;
   onOfferingsChange: (offerings: Offerings) => void;
+  user?: User;
+  admins?: User[];
+  churchMembers?: ChurchMember[];
+  familyUnits?: FamilyUnit[];
+  transferRequests?: TransferRequest[];
+  meetings?: ChurchMeeting[];
+  officers?: ChurchOfficer[];
+  onAddChurchMember?: (member: Omit<ChurchMember, 'id' | 'churchId'>) => void;
+  onUpdateChurchMember?: (id: string, updates: Partial<ChurchMember>) => void;
+  onDeleteChurchMember?: (id: string) => void;
+  onAddFamilyUnit?: (family: Omit<FamilyUnit, 'id' | 'churchId'>) => void;
+  onUpdateFamilyUnit?: (id: string, updates: Partial<FamilyUnit>) => void;
+  onDeleteFamilyUnit?: (id: string) => void;
+  onAddMeeting?: (meeting: Omit<ChurchMeeting, 'id' | 'churchId'>) => void;
+  onUpdateMeeting?: (id: string, updates: Partial<ChurchMeeting>) => void;
+  onDeleteMeeting?: (id: string) => void;
+  onAddOfficer?: (officer: Omit<ChurchOfficer, 'id' | 'churchId'>) => void;
+  onUpdateOfficer?: (id: string, updates: Partial<ChurchOfficer>) => void;
+  onDeleteOfficer?: (id: string) => void;
+  onInitiateTransfer?: (studentId: string, studentName: string, toChurchId: string, toChurchName: string, reason?: string) => void;
+  onUpdateTransferStage?: (requestId: string, status: TransferRequest['status'], extra?: Partial<TransferRequest>) => void;
 }
 
 const ADULT_LANGUAGES = ['English', 'Bemba', 'Tonga', 'Nyanja', 'Lozi'];
@@ -41,9 +67,30 @@ const ClerkDashboard: React.FC<ClerkDashboardProps> = ({
   resetRequests,
   resolveResetRequest,
   offerings,
-  onOfferingsChange
+  onOfferingsChange,
+  user,
+  admins = [],
+  churchMembers = [],
+  familyUnits = [],
+  transferRequests = [],
+  meetings = [],
+  officers = [],
+  onAddChurchMember = () => {},
+  onUpdateChurchMember = () => {},
+  onDeleteChurchMember = () => {},
+  onAddFamilyUnit = () => {},
+  onUpdateFamilyUnit = () => {},
+  onDeleteFamilyUnit = () => {},
+  onAddMeeting = () => {},
+  onUpdateMeeting = () => {},
+  onDeleteMeeting = () => {},
+  onAddOfficer = () => {},
+  onUpdateOfficer = () => {},
+  onDeleteOfficer = () => {},
+  onInitiateTransfer = () => {},
+  onUpdateTransferStage = () => {}
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'teachers' | 'classes' | 'announcements' | 'attendance' | 'offerings' | 'notify'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'teachers' | 'classes' | 'announcements' | 'attendance' | 'offerings' | 'notify' | 'family_units' | 'transfers' | 'governance' | 'documents' | 'conference'>('overview');
   
   // AI compiling states
   const [aiSummary, setAiSummary] = useState('');
@@ -278,7 +325,12 @@ const ClerkDashboard: React.FC<ClerkDashboardProps> = ({
           { id: 'announcements', label: 'Announcements Feed', icon: Bell },
           { id: 'attendance', label: 'Attendance Records', icon: Calendar },
           { id: 'offerings', label: 'Financial Offerings', icon: DollarSign },
-          { id: 'notify', label: 'Broadcaster', icon: Mail }
+          { id: 'notify', label: 'Broadcaster', icon: Mail },
+          { id: 'family_units', label: 'Family Units', icon: Home },
+          { id: 'transfers', label: 'Transfers Pipeline', icon: ArrowRightLeft },
+          { id: 'governance', label: 'Church Governance', icon: Building2 },
+          { id: 'documents', label: 'Documents & Certificates', icon: FileText },
+          { id: 'conference', label: 'Conference Sync & ACMS', icon: Globe }
         ].map(tab => {
           const Icon = tab.icon;
           return (
@@ -732,6 +784,65 @@ const ClerkDashboard: React.FC<ClerkDashboardProps> = ({
             </button>
           </form>
         </div>
+      )}
+
+      {/* 8. FAMILY UNITS */}
+      {activeTab === 'family_units' && (
+        <FamilyUnitsView
+          members={churchMembers}
+          familyUnits={familyUnits}
+          onAddMember={onAddChurchMember}
+          onUpdateMember={onUpdateChurchMember}
+          onDeleteMember={onDeleteChurchMember}
+          onAddFamilyUnit={onAddFamilyUnit}
+          onUpdateFamilyUnit={onUpdateFamilyUnit}
+          onDeleteFamilyUnit={onDeleteFamilyUnit}
+        />
+      )}
+
+      {/* 9. TRANSFERS PIPELINE */}
+      {activeTab === 'transfers' && (
+        <TransfersPipelineView
+          requests={transferRequests}
+          currentChurchUser={user || ({ id: 'clerk-user', name: 'Church Clerk', role: Role.CLERK } as User)}
+          allChurches={admins}
+          members={churchMembers}
+          onInitiateTransfer={onInitiateTransfer}
+          onUpdateTransferStage={onUpdateTransferStage}
+          onRejectTransfer={(id) => onUpdateTransferStage(id, 'rejected')}
+        />
+      )}
+
+      {/* 10. GOVERNANCE MEETINGS */}
+      {activeTab === 'governance' && (
+        <GovernanceMeetingsView
+          meetings={meetings}
+          officers={officers}
+          onAddMeeting={onAddMeeting}
+          onUpdateMeeting={onUpdateMeeting}
+          onDeleteMeeting={onDeleteMeeting}
+          onAddOfficer={onAddOfficer}
+          onUpdateOfficer={onUpdateOfficer}
+          onDeleteOfficer={onDeleteOfficer}
+        />
+      )}
+
+      {/* 11. DOCUMENTS & CERTIFICATES */}
+      {activeTab === 'documents' && (
+        <DocumentGeneratorView
+          members={churchMembers}
+          currentChurchUser={user || ({ id: 'clerk-user', name: 'Church Clerk', role: Role.CLERK } as User)}
+        />
+      )}
+
+      {/* 12. CONFERENCE SYNC & ACMS */}
+      {activeTab === 'conference' && (
+        <ConferenceSyncView
+          members={churchMembers}
+          familyUnits={familyUnits}
+          transfers={transferRequests}
+          currentChurchUser={user || ({ id: 'clerk-user', name: 'Church Clerk', role: Role.CLERK } as User)}
+        />
       )}
 
       {/* ==================================== MODALS ==================================== */}

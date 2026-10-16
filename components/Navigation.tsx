@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { LogOut, User, ChurchIcon, Bell, Check, Globe, Map } from 'lucide-react';
+import { 
+  LogOut, User, ChurchIcon, Bell, Check, Globe, Map, 
+  Shield, Landmark, BookOpen, Award
+} from 'lucide-react';
 import { User as UserType, Role, Notification } from '../types.ts';
 import sdaLogoImg from '../sda.png';
 
@@ -9,6 +12,7 @@ interface NavigationProps {
   onLogout: () => void;
   onProfileClick: () => void;
   onMarkNotificationRead: (id: string) => void;
+  onOpenPitchModal?: () => void;
 }
 
 const Navigation: React.FC<NavigationProps> = ({
@@ -16,19 +20,32 @@ const Navigation: React.FC<NavigationProps> = ({
   notifications,
   onLogout,
   onProfileClick,
-  onMarkNotificationRead
+  onMarkNotificationRead,
+  onOpenPitchModal
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const getRoleLabel = () => {
     switch (user.role) {
+      case Role.SUPER_ADMIN:
+        return { label: 'Super Admin', color: 'bg-purple-700 text-white', icon: Shield };
+      case Role.CONFERENCE_PRESIDENT:
+        return { label: 'Conference President', color: 'bg-indigo-600 text-white', icon: Globe };
       case Role.CONFERENCE_ADMIN:
         return { label: 'Conference Admin', color: 'bg-indigo-600 text-white', icon: Globe };
+      case Role.DISTRICT_PASTOR:
+        return { label: 'District Pastor', color: 'bg-teal-600 text-white', icon: Map };
       case Role.DISTRICT_ADMIN:
         return { label: 'District Admin', color: 'bg-blue-600 text-white', icon: Map };
+      case Role.CHURCH_ADMIN:
+        return { label: 'First Elder / Admin', color: 'bg-amber-600 text-white', icon: ChurchIcon };
       case Role.CLERK:
-        return { label: 'Church Admin / Clerk', color: 'bg-amber-500 text-blue-950', icon: ChurchIcon };
+        return { label: 'Church Clerk', color: 'bg-amber-500 text-blue-950', icon: ChurchIcon };
+      case Role.TREASURER:
+        return { label: 'Church Treasurer', color: 'bg-emerald-600 text-white', icon: Landmark };
+      case Role.SUPERINTENDENT:
+        return { label: 'SS Superintendent', color: 'bg-blue-600 text-white', icon: BookOpen };
       case Role.TEACHER:
         return { label: 'SS Teacher', color: 'bg-emerald-600 text-white', icon: User };
       default:
@@ -54,10 +71,12 @@ const Navigation: React.FC<NavigationProps> = ({
                 SDA Sabbath School
               </p>
               <p className="text-xs font-semibold text-white opacity-85">
-                {user.role === Role.CONFERENCE_ADMIN
-                  ? 'Zambia Union Conference'
-                  : user.role === Role.DISTRICT_ADMIN
-                  ? 'District Management'
+                {user.role === Role.SUPER_ADMIN
+                  ? 'General Administration • Division Level'
+                  : user.role === Role.CONFERENCE_ADMIN || user.role === Role.CONFERENCE_PRESIDENT
+                  ? (user.conferenceName || 'Zambia Union Conference')
+                  : user.role === Role.DISTRICT_ADMIN || user.role === Role.DISTRICT_PASTOR
+                  ? (user.districtName || 'District Management')
                   : user.churchName || 'Digital Register'}
               </p>
             </div>
@@ -66,6 +85,18 @@ const Navigation: React.FC<NavigationProps> = ({
           {/* Role Badge + Controls */}
           <div className="flex items-center gap-3 relative">
             
+            {/* Executive Briefing / Standards Pill */}
+            {onOpenPitchModal && (
+              <button
+                onClick={onOpenPitchModal}
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all"
+                title="Church Manual Standards & Enterprise Briefing"
+              >
+                <Award className="w-3.5 h-3.5 text-amber-400" />
+                <span>GC Standards</span>
+              </button>
+            )}
+
             {/* Role Badge */}
             <span
               className={`hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${roleInfo.color}`}

@@ -1,18 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Role, User, Class, Announcement, AttendanceRecord, Student, Offerings, District, Church, Notification, PendingDistrictRegistration } from './types.ts';
-import { INITIAL_TEACHERS, INITIAL_CLASSES } from './constants.ts';
+import { 
+  Role, User, Class, Announcement, AttendanceRecord, Student, Offerings, 
+  District, Church, Notification, PendingDistrictRegistration,
+  ChurchMember, FamilyUnit, ChurchMeeting, ChurchOfficer, TransferRequest,
+  ChurchBankAccount, OfferingEnvelope, LooseOfferingRecord, SabbathSchoolTransmission,
+  DisbursementRecord, AuxiliaryDepartment, ConferenceRemittance, LiteratureOrder, AuditRecord,
+  MobilisationPlanItem, ConferenceEmphases, SSCurriculumItem, SSProgramRunSheet,
+  SSCouncilMember, SSAuxiliaryOfficer, SSTeacherCandidate, SSTeachersMeeting,
+  SSEvangelismProject, SSGreetingSchedule, SSQuarterlyReport, SSClassSession,
+  FinancialTransmission, StudyGuideOrder, ChurchStation, Conference
+} from './types.ts';
+import { 
+  INITIAL_TEACHERS, INITIAL_CLASSES, INITIAL_FAMILY_UNITS, 
+  INITIAL_MEETINGS, INITIAL_OFFICERS, INITIAL_CHURCH_MEMBERS, 
+  INITIAL_TRANSFER_REQUESTS, INITIAL_TREASURER, INITIAL_BANK_ACCOUNTS,
+  INITIAL_AUXILIARY_DEPARTMENTS, INITIAL_ENVELOPES, INITIAL_LOOSE_OFFERINGS,
+  INITIAL_SS_TRANSMISSIONS, INITIAL_DISBURSEMENTS, INITIAL_CONFERENCE_REMITTANCES,
+  INITIAL_LITERATURE_ORDERS, INITIAL_AUDIT_RECORDS,
+  INITIAL_SUPERINTENDENT, INITIAL_MOBILISATION_PLAN, INITIAL_CONFERENCE_EMPHASES,
+  INITIAL_CURRICULUM_INVENTORY, INITIAL_PROGRAM_RUN_SHEET, INITIAL_COUNCIL_MEMBERS,
+  INITIAL_AUXILIARY_OFFICERS, INITIAL_TEACHER_CANDIDATES, INITIAL_TEACHERS_MEETINGS,
+  INITIAL_EVANGELISM_PROJECTS, INITIAL_STUDY_GUIDE_ORDERS,
+  INITIAL_CHURCH_ADMIN, INITIAL_CLERK, INITIAL_CHURCHES,
+  INITIAL_CONFERENCES, INITIAL_DISTRICTS, INITIAL_SUPER_ADMIN,
+  INITIAL_CONFERENCE_PRESIDENT, INITIAL_DISTRICT_PASTOR
+} from './constants.ts';
 import LoginPage from './pages/LoginPage.tsx';
 import SignupPage from './pages/SignupPage.tsx';
 import ClerkDashboard from './pages/ClerkDashboard.tsx';
 import TeacherDashboard from './pages/TeacherDashboard.tsx';
+import { ChurchAdminDashboard } from './pages/ChurchAdminDashboard.tsx';
+import { TreasurerDashboard } from './pages/TreasurerDashboard.tsx';
+import { SuperintendentDashboard } from './pages/SuperintendentDashboard.tsx';
+import { SuperAdminDashboard } from './pages/SuperAdminDashboard.tsx';
 import ResetPasswordPage from './pages/ResetPasswordPage.tsx';
 import GuestListPage from './pages/GuestListPage.tsx';
 import RegisterChurchPage from './pages/RegisterChurchPage.tsx';
 import RegisterDistrictPage from './pages/RegisterDistrictPage.tsx';
 import ConferenceDashboard from './pages/ConferenceDashboard.tsx';
+import { ConferencePresidentDashboard } from './pages/ConferencePresidentDashboard.tsx';
 import DistrictDashboard from './pages/DistrictDashboard.tsx';
+import { DistrictPastorDashboard } from './pages/DistrictPastorDashboard.tsx';
 import Navigation from './components/Navigation.tsx';
+import { ClientPitchModal } from './components/ClientPitchModal.tsx';
 import SDALogo from './components/SDALogo.tsx';
 import { DatabaseZap } from 'lucide-react';
 
@@ -45,6 +76,7 @@ const App: React.FC = () => {
     birthdayThank: 0,
     investmentFund: 0
   });
+  const [conferences, setConferences] = useState<Conference[]>(INITIAL_CONFERENCES);
   const [districts, setDistricts] = useState<District[]>([]);
   const [churches, setChurches] = useState<Church[]>([]);
   const [pendingDistrictRegs, setPendingDistrictRegs] = useState<PendingDistrictRegistration[]>([]);
@@ -53,7 +85,118 @@ const App: React.FC = () => {
   const [dbError, setDbError] = useState<string | null>(null);
   const [isClerkManageOpen, setIsClerkManageOpen] = useState(false);
   const [isTeacherProfileOpen, setIsTeacherProfileOpen] = useState(false);
+  const [isPitchModalOpen, setIsPitchModalOpen] = useState(false);
   const [resetRequests, setResetRequests] = useState<{ id: string; name: string; email: string; requestedAt: string }[]>([]);
+
+  // -------------------------------------------------------------
+  // NEW STAFF & ADVANCED MODULES STATE (from sda-mis)
+  // -------------------------------------------------------------
+  const [activeChurchId, setActiveChurchId] = useState<string>('church-woodlands');
+  const [superAdmins, setSuperAdmins] = useState<User[]>([INITIAL_SUPER_ADMIN]);
+  const [conferencePresidents, setConferencePresidents] = useState<User[]>([INITIAL_CONFERENCE_PRESIDENT]);
+  const [districtPastors, setDistrictPastors] = useState<User[]>([INITIAL_DISTRICT_PASTOR]);
+  const [churchAdmins, setChurchAdmins] = useState<User[]>([INITIAL_CHURCH_ADMIN]);
+  const [clerks, setClerks] = useState<User[]>([INITIAL_CLERK]);
+  const [transferRequests, setTransferRequests] = useState<TransferRequest[]>(INITIAL_TRANSFER_REQUESTS);
+  const [churchMembers, setChurchMembers] = useState<ChurchMember[]>(INITIAL_CHURCH_MEMBERS);
+  const [familyUnits, setFamilyUnits] = useState<FamilyUnit[]>(INITIAL_FAMILY_UNITS);
+  const [meetings, setMeetings] = useState<ChurchMeeting[]>(INITIAL_MEETINGS);
+  const [officers, setOfficers] = useState<ChurchOfficer[]>(INITIAL_OFFICERS);
+
+  // Treasury State
+  const [treasurers, setTreasurers] = useState<User[]>([INITIAL_TREASURER]);
+  const [bankAccounts, setBankAccounts] = useState<ChurchBankAccount[]>(INITIAL_BANK_ACCOUNTS);
+  const [remittances, setRemittances] = useState<ConferenceRemittance[]>(INITIAL_CONFERENCE_REMITTANCES);
+  const [ssTransmissions, setSsTransmissions] = useState<SabbathSchoolTransmission[]>(INITIAL_SS_TRANSMISSIONS);
+  const [disbursements, setDisbursements] = useState<DisbursementRecord[]>(INITIAL_DISBURSEMENTS);
+  const [auxiliaryDepartments, setAuxiliaryDepartments] = useState<AuxiliaryDepartment[]>(INITIAL_AUXILIARY_DEPARTMENTS);
+  const [envelopes, setEnvelopes] = useState<OfferingEnvelope[]>(INITIAL_ENVELOPES);
+  const [looseOfferings, setLooseOfferings] = useState<LooseOfferingRecord[]>(INITIAL_LOOSE_OFFERINGS);
+  const [literatureOrders, setLiteratureOrders] = useState<LiteratureOrder[]>(INITIAL_LITERATURE_ORDERS);
+  const [auditRecords, setAuditRecords] = useState<AuditRecord[]>(INITIAL_AUDIT_RECORDS);
+
+  // Superintendent State
+  const [superintendents, setSuperintendents] = useState<User[]>([INITIAL_SUPERINTENDENT]);
+  const [mobilisationPlan, setMobilisationPlan] = useState<MobilisationPlanItem[]>(INITIAL_MOBILISATION_PLAN);
+  const [conferenceEmphases, setConferenceEmphases] = useState<ConferenceEmphases>(INITIAL_CONFERENCE_EMPHASES);
+  const [curriculumInventory, setCurriculumInventory] = useState<SSCurriculumItem[]>(INITIAL_CURRICULUM_INVENTORY);
+  const [programRunSheet, setProgramRunSheet] = useState<SSProgramRunSheet>(INITIAL_PROGRAM_RUN_SHEET);
+  const [councilMembers, setCouncilMembers] = useState<SSCouncilMember[]>(INITIAL_COUNCIL_MEMBERS);
+  const [auxiliaryOfficers, setAuxiliaryOfficers] = useState<SSAuxiliaryOfficer[]>(INITIAL_AUXILIARY_OFFICERS);
+  const [teacherCandidates, setTeacherCandidates] = useState<SSTeacherCandidate[]>(INITIAL_TEACHER_CANDIDATES);
+  const [teachersMeetings, setTeachersMeetings] = useState<SSTeachersMeeting[]>(INITIAL_TEACHERS_MEETINGS);
+  const [evangelismProjects, setEvangelismProjects] = useState<SSEvangelismProject[]>(INITIAL_EVANGELISM_PROJECTS);
+  const [greetingSchedules, setGreetingSchedules] = useState<SSGreetingSchedule[]>([
+    {
+      id: 'gs-1',
+      churchId: 'admin-initial',
+      sabbathDate: '2026-09-12',
+      division: 'Main Sanctuary Foyer',
+      assignedHostesses: ['Sister M. Kalunga (Head Greeter)', 'Brother B. Zulu', 'Sister S. Jenkins'],
+      welcomeTheme: 'Rooted in Christ’s Love: A Warm Sabbath Welcome to All Guests',
+      status: 'scheduled'
+    },
+    {
+      id: 'gs-2',
+      churchId: 'admin-initial',
+      sabbathDate: '2026-09-19',
+      division: 'Children & Youth Wing Entrance',
+      assignedHostesses: ['Sister Alice Walker', 'Brother T. Silwimba'],
+      welcomeTheme: 'Youth & Children Welcome with Memory Verse Cards',
+      status: 'scheduled'
+    }
+  ]);
+  const [quarterlyReport, setQuarterlyReport] = useState<SSQuarterlyReport>({
+    id: 'rep-q3-2026',
+    churchId: 'admin-initial',
+    quarter: 'Q3',
+    year: 2026,
+    totalEnrollment: 320,
+    averageAttendance: 283,
+    dailyStudyPercentage: 78,
+    missionOfferingsTotal: 28450,
+    branchSabbathSchoolsCount: 2,
+    baptismsFromSS: 14,
+    isClassRegisterAudited: true,
+    isDailyStudyCalculated: true,
+    isOfferingsReconciled: true,
+    isSuperintendentSigned: true,
+    isSecretarySigned: true,
+    isTransmittedToConference: false,
+  });
+  const [classSessions, setClassSessions] = useState<SSClassSession[]>([
+    {
+      id: 'cs-1',
+      classId: 'c1',
+      className: 'Adult Sabbath School',
+      date: '2026-09-05',
+      attendanceCount: 45,
+      dailyLessonStudyCount: 36,
+      missionOfferingAmount: 850,
+      teacherName: 'Elder Musonda'
+    },
+    {
+      id: 'cs-2',
+      classId: 'c2',
+      className: 'Youth Ministry',
+      date: '2026-09-05',
+      attendanceCount: 28,
+      dailyLessonStudyCount: 22,
+      missionOfferingAmount: 420,
+      teacherName: 'Sister Chanda'
+    },
+    {
+      id: 'cs-3',
+      classId: 'c3',
+      className: 'Primary Class',
+      date: '2026-09-05',
+      attendanceCount: 22,
+      dailyLessonStudyCount: 19,
+      missionOfferingAmount: 260,
+      teacherName: 'Brother Mwale'
+    }
+  ]);
+  const [studyGuideOrders, setStudyGuideOrders] = useState<StudyGuideOrder[]>(INITIAL_STUDY_GUIDE_ORDERS);
 
   // Initial Data Load from Database
   useEffect(() => {
@@ -78,7 +221,7 @@ const App: React.FC = () => {
             const teachersData = usersData.filter((user: User) => user.role === Role.TEACHER);
             const adminsData = usersData.filter((user: User) => user.role === Role.CLERK);
             setAdmins(adminsData);
-            setTeachers(teachersData);
+            setTeachers(teachersData.length > 0 ? teachersData : INITIAL_TEACHERS);
           }
           
           // Load classes from database (with students)
@@ -130,9 +273,11 @@ const App: React.FC = () => {
           if (districtsResponse.ok) {
             const districtsData = await districtsResponse.json();
             setDistricts(districtsData);
-            // Extracted from districts query
             const allChurches = districtsData.flatMap((d: any) => d.churches || []);
-            setChurches(allChurches);
+            setChurches(allChurches.length > 0 ? allChurches : (INITIAL_CHURCHES as any));
+          } else {
+            setDistricts(INITIAL_DISTRICTS);
+            setChurches(INITIAL_CHURCHES as any);
           }
 
           // Load pending district registrations
@@ -143,7 +288,7 @@ const App: React.FC = () => {
             if (distRegRes.ok) {
               setPendingDistrictRegs(await distRegRes.json());
             }
-          } catch (e) { /* ignore if endpoint not yet deployed */ }
+          } catch (e) {}
 
           // Load offerings from database
           const offeringsResponse = await fetch(`${BACKEND_URL}/offerings`, {
@@ -151,169 +296,132 @@ const App: React.FC = () => {
           });
           if (offeringsResponse.ok) {
             const offeringsData = await offeringsResponse.json();
-            if (offeringsData) {
-              setOfferings({
-                weeklyMission: Number(offeringsData.weeklyMission || 0),
-                thirteenthSabbath: Number(offeringsData.thirteenthSabbath || 0),
-                birthdayThank: Number(offeringsData.birthdayThank || 0),
-                investmentFund: Number(offeringsData.investmentFund || 0)
-              });
-            }
+            setOfferings(offeringsData);
           }
-
-          // Load attendance records from database
+          
+          // Load attendance records
           const attendanceResponse = await fetch(`${BACKEND_URL}/attendance`, {
             headers: withChurchHeader()
           });
           if (attendanceResponse.ok) {
             const attendanceData = await attendanceResponse.json();
-            if (Array.isArray(attendanceData)) {
-              setAttendanceRecords(attendanceData);
-            }
+            setAttendanceRecords(attendanceData);
           }
-          
         } else {
-          setDbError("Backend server error");
+          // Fallback to local storage if backend is not available
           setIsBackendConnected(false);
-          // Fallback to local data
-          setTeachers(INITIAL_TEACHERS);
-          setClasses(INITIAL_CLASSES);
-          setAdmins([]);
+          loadFromLocalStorage();
         }
-      } catch (err) {
-        console.warn("Backend not detected. Falling back to local storage.");
+      } catch (err: any) {
+        console.warn("Backend not accessible, loading from local storage:", err.message);
         setIsBackendConnected(false);
-        setDbError("Backend connection failed. Running in local mode.");
-        
-        // Fallback to local data
+        loadFromLocalStorage();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const loadFromLocalStorage = () => {
+      try {
         const savedData = localStorage.getItem('sda_registry_full_data');
         if (savedData) {
-          try {
-            const parsed = JSON.parse(savedData);
-            setAdmins(parsed.admins || []);
-            setTeachers(parsed.teachers || INITIAL_TEACHERS);
-            setClasses(parsed.classes || INITIAL_CLASSES);
-            setAnnouncements(parsed.announcements || []);
-            setAttendanceRecords(parsed.attendanceRecords || []);
-            setDistricts(parsed.districts && parsed.districts.length > 0 ? parsed.districts : [
-              { id: 'dist_001', name: 'Lusaka Central District', conferenceId: 'conf_001', is_active: true },
-              { id: 'dist_002', name: 'Copperbelt North District', conferenceId: 'conf_001', is_active: true }
-            ]);
-            setChurches(parsed.churches || []);
-            setPendingDistrictRegs(parsed.pendingDistrictRegs || []);
-          } catch (e) {
-            console.error("Local data parse error");
-            setAdmins([]);
-            setTeachers(INITIAL_TEACHERS);
-            setClasses(INITIAL_CLASSES);
-            setOfferings({
-              weeklyMission: 0,
-              thirteenthSabbath: 0,
-              birthdayThank: 0,
-              investmentFund: 0
-            });
-            setDistricts([
-              { id: 'dist_001', name: 'Lusaka Central District', conferenceId: 'conf_001', is_active: true },
-              { id: 'dist_002', name: 'Copperbelt North District', conferenceId: 'conf_001', is_active: true }
-            ]);
-            setChurches([]);
-            setPendingDistrictRegs([]);
-          }
-        } else {
-          setAdmins([]);
-          setTeachers(INITIAL_TEACHERS);
-          setClasses(INITIAL_CLASSES);
-          setOfferings({
+          const parsed = JSON.parse(savedData);
+          setAdmins(parsed.admins || []);
+          setTeachers(parsed.teachers || INITIAL_TEACHERS);
+          setClasses(parsed.classes || INITIAL_CLASSES);
+          setAnnouncements(parsed.announcements || []);
+          setAttendanceRecords(parsed.attendanceRecords || []);
+          setOfferings(parsed.offerings || {
             weeklyMission: 0,
             thirteenthSabbath: 0,
             birthdayThank: 0,
             investmentFund: 0
           });
-          setDistricts([
-            { id: 'dist_001', name: 'Lusaka Central District', conferenceId: 'conf_001', is_active: true },
-            { id: 'dist_002', name: 'Copperbelt North District', conferenceId: 'conf_001', is_active: true }
-          ]);
-          setChurches([]);
-          setPendingDistrictRegs([]);
+          setDistricts(parsed.districts || INITIAL_DISTRICTS);
+          setChurches(parsed.churches || (INITIAL_CHURCHES as any));
+          if (parsed.churchMembers) setChurchMembers(parsed.churchMembers);
+          if (parsed.familyUnits) setFamilyUnits(parsed.familyUnits);
+          if (parsed.transferRequests) setTransferRequests(parsed.transferRequests);
+          if (parsed.meetings) setMeetings(parsed.meetings);
+          if (parsed.officers) setOfficers(parsed.officers);
+          if (parsed.bankAccounts) setBankAccounts(parsed.bankAccounts);
+          if (parsed.remittances) setRemittances(parsed.remittances);
+          if (parsed.disbursements) setDisbursements(parsed.disbursements);
+          if (parsed.envelopes) setEnvelopes(parsed.envelopes);
+          if (parsed.looseOfferings) setLooseOfferings(parsed.looseOfferings);
+          if (parsed.studyGuideOrders) setStudyGuideOrders(parsed.studyGuideOrders);
+        } else {
+          setTeachers(INITIAL_TEACHERS);
+          setClasses(INITIAL_CLASSES);
+          setDistricts(INITIAL_DISTRICTS);
+          setChurches(INITIAL_CHURCHES as any);
         }
-      }
-      
-      // Restore user session
-      const savedUser = localStorage.getItem('sda_current_user');
-      if (savedUser) {
-        try {
-          setCurrentUser(JSON.parse(savedUser));
-        } catch (e) {
-          localStorage.removeItem('sda_current_user');
-        }
-      }
 
-      const savedRequests = localStorage.getItem('sda_reset_requests');
-      if (savedRequests) {
-        try {
-          setResetRequests(JSON.parse(savedRequests));
-        } catch (e) {
-          localStorage.removeItem('sda_reset_requests');
+        const savedUser = localStorage.getItem('sda_current_user');
+        if (savedUser) {
+          const u = JSON.parse(savedUser);
+          setCurrentUser(u);
+          if (u.churchId) setActiveChurchId(u.churchId);
         }
+
+        const savedReqs = localStorage.getItem('sda_reset_requests');
+        if (savedReqs) {
+          setResetRequests(JSON.parse(savedReqs));
+        }
+      } catch (e) {
+        console.error("Local storage load error:", e);
       }
-      
-      setIsLoading(false);
     };
 
     initializeApp();
   }, []);
 
-  // Always persist to localStorage
+  // Save to LocalStorage Backup
   useEffect(() => {
-    if (isLoading) return;
-    const dataToSync = {
-      admins,
-      teachers,
-      classes,
-      announcements,
-      attendanceRecords,
-      offerings,
-      districts,
-      churches,
-      pendingDistrictRegs
-    };
-    localStorage.setItem('sda_registry_full_data', JSON.stringify(dataToSync));
-  }, [admins, teachers, classes, announcements, attendanceRecords, offerings, districts, churches, pendingDistrictRegs, isLoading]);
-
-  // Sync across browser tabs in local mode
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'sda_registry_full_data' && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          if (parsed.districts) setDistricts(parsed.districts);
-          if (parsed.churches) setChurches(parsed.churches);
-          if (parsed.pendingDistrictRegs) setPendingDistrictRegs(parsed.pendingDistrictRegs);
-          if (parsed.teachers) setTeachers(parsed.teachers);
-          if (parsed.classes) setClasses(parsed.classes);
-          if (parsed.announcements) setAnnouncements(parsed.announcements);
-          if (parsed.attendanceRecords) setAttendanceRecords(parsed.attendanceRecords);
-          if (parsed.offerings) setOfferings(parsed.offerings);
-        } catch (err) {}
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+    if (!isLoading) {
+      const fullData = {
+        admins,
+        teachers,
+        classes,
+        announcements,
+        attendanceRecords,
+        offerings,
+        districts,
+        churches,
+        churchMembers,
+        familyUnits,
+        transferRequests,
+        meetings,
+        officers,
+        bankAccounts,
+        remittances,
+        disbursements,
+        envelopes,
+        looseOfferings,
+        studyGuideOrders
+      };
+      localStorage.setItem('sda_registry_full_data', JSON.stringify(fullData));
+    }
+  }, [
+    admins, teachers, classes, announcements, attendanceRecords, offerings, 
+    districts, churches, churchMembers, familyUnits, transferRequests, 
+    meetings, officers, bankAccounts, remittances, disbursements, 
+    envelopes, looseOfferings, studyGuideOrders, isLoading
+  ]);
 
   // Sync Data Effect (backend)
   useEffect(() => {
     if (isLoading || dbError || !isBackendConnected) return;
 
     const syncData = async () => {
-    const dataToSync = { 
-      admins,
-      teachers,
-      classes,
-      announcements,
-      attendanceRecords,
-      offerings
-    };
+      const dataToSync = { 
+        admins,
+        teachers,
+        classes,
+        announcements,
+        attendanceRecords,
+        offerings
+      };
 
       if (isBackendConnected) {
         try {
@@ -329,7 +437,6 @@ const App: React.FC = () => {
           }
 
           setDbError(null);
-          console.log("✅ Sync completed successfully");
         } catch (err: any) {
           console.error("❌ SYNC FAILURE:", err);
           setDbError("Sync failed: " + err.message);
@@ -337,10 +444,9 @@ const App: React.FC = () => {
       }
     };
 
-    const debounceSync = setTimeout(syncData, 1000); // debounce for 1s
+    const debounceSync = setTimeout(syncData, 1000);
     return () => clearTimeout(debounceSync);
   }, [admins, teachers, classes, announcements, attendanceRecords, offerings, isBackendConnected, isLoading, dbError]);
-
 
   const handleSignup = async (user: User) => {
     if (isBackendConnected) {
@@ -355,7 +461,6 @@ const App: React.FC = () => {
         }
       } catch (err) {
         console.error('Registration failed:', err);
-        // Fallback to local
         setAdmins(prev => [...prev, user]);
       }
     } else {
@@ -366,8 +471,10 @@ const App: React.FC = () => {
   const handleLogin = (user: User) => {
     setCurrentUser(user);
     localStorage.setItem('sda_current_user', JSON.stringify(user));
+    if (user.churchId) {
+      setActiveChurchId(user.churchId);
+    }
     
-    // Update last login in database
     if (isBackendConnected) {
       fetch(`${BACKEND_URL}/users/${user.id}/last-login`, {
         method: 'PUT',
@@ -444,258 +551,294 @@ const App: React.FC = () => {
       }
       return false;
     }
-    // Local fallback
     setChurches(prev => [...prev, { ...churchData, status: 'pending', membership: Number(churchData.membership) || 0 }]);
     return true;
   };
 
-  const handleApproveChurch = async (id: string) => {
+  const handleCreateDistrict = async (districtData: { name: string; conferenceId: string }) => {
     if (isBackendConnected) {
       try {
-        const response = await fetch(`${BACKEND_URL}/admin/churches/${id}/approve`, {
+        const response = await fetch(`${BACKEND_URL}/admin/districts`, {
+          method: 'POST',
+          headers: withChurchHeader({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(districtData),
+        });
+        if (response.ok) {
+          const newDistrict = await response.json();
+          setDistricts(prev => [...prev, newDistrict]);
+          return true;
+        }
+      } catch (err) {
+        console.error('Failed to create district:', err);
+      }
+      return false;
+    }
+    const newDistrict: District = {
+      id: `dist_${Date.now()}`,
+      name: districtData.name,
+      conferenceId: districtData.conferenceId,
+      is_active: true,
+      created_at: new Date().toISOString()
+    };
+    setDistricts(prev => [...prev, newDistrict]);
+    return true;
+  };
+
+  const handleUpdateDistrict = async (districtId: string, updates: Partial<District>) => {
+    if (isBackendConnected) {
+      try {
+        const response = await fetch(`${BACKEND_URL}/admin/districts/${districtId}`, {
+          method: 'PUT',
+          headers: withChurchHeader({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(updates),
+        });
+        if (response.ok) {
+          setDistricts(prev => prev.map(d => d.id === districtId ? { ...d, ...updates } : d));
+          return true;
+        }
+      } catch (err) {
+        console.error('Failed to update district:', err);
+      }
+      return false;
+    }
+    setDistricts(prev => prev.map(d => d.id === districtId ? { ...d, ...updates } : d));
+    return true;
+  };
+
+  const handleApproveChurch = async (churchId: string) => {
+    if (isBackendConnected) {
+      try {
+        const response = await fetch(`${BACKEND_URL}/admin/churches/${churchId}/approve`, {
           method: 'POST',
           headers: withChurchHeader()
         });
         if (response.ok) {
-          const resData = await response.json();
-          alert(`Church approved successfully! Clerk temporary password: ${resData.tempPass}`);
-          setChurches(prev => prev.map(c => c.id === id ? { ...c, status: 'approved' } : c));
-          
-          // Refresh users
-          const usersRes = await fetch(`${BACKEND_URL}/users`, { headers: withChurchHeader() });
-          if (usersRes.ok) {
-            const usersData = await usersRes.json();
-            setTeachers(usersData.filter((user: User) => user.role === Role.TEACHER));
-            setAdmins(usersData.filter((user: User) => user.role === Role.CLERK));
-          }
+          setChurches(prev => prev.map(c => c.id === churchId ? { ...c, status: 'approved' } : c));
+          return true;
         }
       } catch (err) {
         console.error('Failed to approve church:', err);
       }
-    } else {
-      const churchToApprove = churches.find(c => c.id === id);
-      setChurches(prev => prev.map(c => c.id === id ? { ...c, status: 'approved' } : c));
-      if (churchToApprove) {
-        const newClerk: User = {
-          id: `clerk_${churchToApprove.id || Date.now()}`,
-          name: churchToApprove.clerkName || 'Church Clerk',
-          email: churchToApprove.clerkEmail.toLowerCase().trim(),
-          password: churchToApprove.clerkPassword || 'password123',
-          role: Role.CLERK,
-          churchName: churchToApprove.church_name,
-          churchId: churchToApprove.id,
-          districtId: churchToApprove.districtId,
-          conferenceId: 'conf_001',
-          is_active: true
-        };
-        setAdmins(prev => [...prev.filter(a => a.email.toLowerCase() !== newClerk.email), newClerk]);
-      }
-      alert(`Church approved! Clerk account is now active and can log in.`);
+      return false;
     }
+    setChurches(prev => prev.map(c => c.id === churchId ? { ...c, status: 'approved' } : c));
+    return true;
   };
 
-  const handleApproveDistrictReg = async (id: string) => {
+  const handleApproveDistrictReg = async (registrationId: string) => {
     if (isBackendConnected) {
       try {
-        const response = await fetch(`${BACKEND_URL}/admin/district-registrations/${id}/approve`, {
+        const res = await fetch(`${BACKEND_URL}/admin/district-registrations/${registrationId}/approve`, {
           method: 'POST',
           headers: withChurchHeader()
         });
-        if (response.ok) {
-          const data = await response.json();
-          alert(`District Admin approved! Temporary password: ${data.tempPass || 'See email'}`);
-          setPendingDistrictRegs(prev => prev.filter(r => r.id !== id));
-          // Refresh districts and users
-          const distRes = await fetch(`${BACKEND_URL}/admin/districts`, { headers: withChurchHeader() });
-          if (distRes.ok) { const d = await distRes.json(); setDistricts(d); }
-          const usersRes = await fetch(`${BACKEND_URL}/users`, { headers: withChurchHeader() });
-          if (usersRes.ok) { const u = await usersRes.json(); setTeachers(u.filter((x: User) => x.role === Role.TEACHER)); }
+        if (res.ok) {
+          const data = await res.json();
+          setPendingDistrictRegs(prev => prev.filter(r => r.id !== registrationId));
+          if (data.district) {
+            setDistricts(prev => [...prev, data.district]);
+          }
+          return true;
         }
       } catch (err) {
         console.error('Failed to approve district registration:', err);
       }
-    } else {
-      setPendingDistrictRegs(prev => prev.filter(r => r.id !== id));
+      return false;
     }
+    const reg = pendingDistrictRegs.find(r => r.id === registrationId);
+    if (reg) {
+      setPendingDistrictRegs(prev => prev.filter(r => r.id !== registrationId));
+      const newDist: District = {
+        id: `dist_${Date.now()}`,
+        name: reg.districtName,
+        conferenceId: reg.conferenceId,
+        is_active: true,
+        created_at: new Date().toISOString()
+      };
+      setDistricts(prev => [...prev, newDist]);
+    }
+    return true;
   };
 
-  const handleAdminUpdateUser = async (userId: string, data: Partial<User> & { password?: string }) => {
+  const handlePublishAnnouncement = async (announcementData: {
+    content: string;
+    targetType: 'CONFERENCE' | 'DISTRICT' | 'CHURCH';
+    targetId: string;
+    priority?: 'NORMAL' | 'IMPORTANT' | 'URGENT';
+    expiryDate?: string;
+  }) => {
+    if (!currentUser) return false;
+
+    const payload = {
+      ...announcementData,
+      authorId: currentUser.id,
+      authorName: currentUser.name,
+      authorRole: currentUser.role
+    };
+
     if (isBackendConnected) {
       try {
-        const response = await fetch(`${BACKEND_URL}/admin/users/${userId}`, {
-          method: 'PUT',
-          headers: withChurchHeader({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify(data)
-        });
-        if (response.ok) {
-          // If updating current user, refresh session
-          if (userId === currentUser?.id) {
-            const updated = { ...currentUser, name: data.name ?? currentUser.name, email: data.email ?? currentUser.email };
-            setCurrentUser(updated);
-            localStorage.setItem('sda_current_user', JSON.stringify(updated));
-          }
-          // Refresh user list
-          const usersRes = await fetch(`${BACKEND_URL}/users`, { headers: withChurchHeader() });
-          if (usersRes.ok) {
-            const u = await usersRes.json();
-            setTeachers(u.filter((x: User) => x.role === Role.TEACHER || x.role === Role.CLERK || x.role === Role.DISTRICT_ADMIN));
-          }
-        }
-      } catch (err) {
-        console.error('Failed to update user:', err);
-      }
-    } else {
-      setTeachers(prev => prev.map(t => t.id === userId ? { ...t, ...data } : t));
-    }
-  };
-
-  const handleCreateDistrict = async (name: string) => {
-     if (isBackendConnected) {
-       try {
-         const response = await fetch(`${BACKEND_URL}/admin/districts`, {
-           method: 'POST',
-           headers: withChurchHeader({ 'Content-Type': 'application/json' }),
-           body: JSON.stringify({ name })
-         });
-         if (response.ok) {
-           const newDist = await response.json();
-           setDistricts(prev => [...prev, { ...newDist, is_active: true, churches: [] }]);
-         }
-       } catch (err) {
-         console.error('Failed to create district:', err);
-       }
-     } else {
-       const newDist: District = { id: `dist_${Date.now()}`, name, conferenceId: 'conf_001', is_active: true };
-       setDistricts(prev => [...prev, newDist]);
-     }
-  };
-
-  const handleUpdateDistrict = async (id: string, name: string, is_active: boolean) => {
-     if (isBackendConnected) {
-       try {
-         await fetch(`${BACKEND_URL}/admin/districts/${id}`, {
-           method: 'PUT',
-           headers: withChurchHeader({ 'Content-Type': 'application/json' }),
-           body: JSON.stringify({ name, is_active })
-         });
-       } catch (err) {
-         console.error('Failed to update district:', err);
-       }
-     }
-     setDistricts(prev => prev.map(d => d.id === id ? { ...d, name, is_active } : d));
-  };
-
-  const handleForceChangePassword = async (userId: string, newPass: string) => {
-     if (isBackendConnected) {
-       try {
-         const response = await fetch(`${BACKEND_URL}/users/change-password-force`, {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ userId, newPassword: newPass })
-         });
-         return response.ok;
-       } catch (err) {
-         console.error('Failed to change temp password:', err);
-       }
-       return false;
-     }
-     return true;
-  };
-
-  const handlePublishAnnouncement = async (announceData: any) => {
-    if (isBackendConnected) {
-      try {
-        const response = await fetch(`${BACKEND_URL}/admin/announcements`, {
+        const res = await fetch(`${BACKEND_URL}/admin/announcements`, {
           method: 'POST',
           headers: withChurchHeader({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify(announceData)
+          body: JSON.stringify(payload)
         });
-        if (response.ok) {
-          const savedAnn = await response.json();
-          setAnnouncements(prev => [savedAnn, ...prev]);
+        if (res.ok) {
+          const newAnn = await res.json();
+          setAnnouncements(prev => [newAnn, ...prev]);
+          return true;
         }
       } catch (err) {
         console.error('Failed to publish announcement:', err);
       }
-    } else {
-      setAnnouncements(prev => [announceData, ...prev]);
+      return false;
     }
+
+    const localAnn: Announcement = {
+      id: `ann_${Date.now()}`,
+      teacherId: currentUser.id,
+      teacherName: currentUser.name,
+      className: currentUser.role,
+      content: announcementData.content,
+      timestamp: new Date().toISOString(),
+      status: 'pending',
+      targetType: announcementData.targetType,
+      targetId: announcementData.targetId,
+      priority: announcementData.priority || 'NORMAL',
+      expiryDate: announcementData.expiryDate
+    };
+    setAnnouncements(prev => [localAnn, ...prev]);
+    return true;
+  };
+
+  const handleAdminUpdateUser = async (userId: string, updates: Partial<User>) => {
+    if (isBackendConnected) {
+      try {
+        const res = await fetch(`${BACKEND_URL}/admin/users/${userId}`, {
+          method: 'PUT',
+          headers: withChurchHeader({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(updates)
+        });
+        if (res.ok) {
+          setTeachers(prev => prev.map(t => t.id === userId ? { ...t, ...updates } : t));
+          setAdmins(prev => prev.map(a => a.id === userId ? { ...a, ...updates } : a));
+          return true;
+        }
+      } catch (err) {
+        console.error('Failed to update user via admin:', err);
+      }
+      return false;
+    }
+    setTeachers(prev => prev.map(t => t.id === userId ? { ...t, ...updates } : t));
+    setAdmins(prev => prev.map(a => a.id === userId ? { ...a, ...updates } : a));
+    return true;
+  };
+
+  const handleForceChangePassword = async (userId: string, newPass: string) => {
+    if (isBackendConnected) {
+      try {
+        const res = await fetch(`${BACKEND_URL}/users/change-password-force`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, newPassword: newPass })
+        });
+        return res.ok;
+      } catch (e) {
+        return false;
+      }
+    }
+    return true;
   };
 
   const handleMarkNotificationRead = async (id: string) => {
     if (isBackendConnected) {
-       try {
-         await fetch(`${BACKEND_URL}/notifications/${id}/read`, {
-           method: 'PUT',
-           headers: withChurchHeader()
-         });
-       } catch (err) {
-         console.error('Failed to read notification:', err);
-       }
+      try {
+        await fetch(`${BACKEND_URL}/notifications/${id}/read`, {
+          method: 'PUT',
+          headers: withChurchHeader()
+        });
+      } catch (e) {}
     }
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
   };
 
   const addTeacher = async (name: string, email: string, password: string, classId: string, language?: string) => {
+    const newId = `t${Date.now()}`;
+    const newTeacher: User = {
+      id: newId,
+      name,
+      email,
+      password,
+      role: Role.TEACHER,
+      assignedClass: classId,
+      language: language || 'English',
+      churchName: currentUser?.churchName || 'Woodlands SDA Church',
+      churchId: currentUser?.churchId || activeChurchId
+    };
+
     if (isBackendConnected) {
       try {
         const response = await fetch(`${BACKEND_URL}/users/create-teacher`, {
           method: 'POST',
           headers: withChurchHeader({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ name, email, phone: '', assignedClass: classId }),
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            classId,
+            language: language || 'English',
+            churchId: currentUser?.churchId || CHURCH_ID
+          }),
         });
+
         if (response.ok) {
-          const resData = await response.json();
-          alert(`Teacher created successfully! Temporary password sent to email. Code: ${resData.tempPass}`);
-          
-          // Refresh users
-          const usersResponse = await fetch(`${BACKEND_URL}/users`, {
-            headers: withChurchHeader()
-          });
-          if (usersResponse.ok) {
-            const usersData = await usersResponse.json();
-            setTeachers(usersData.filter((user: User) => user.role === Role.TEACHER));
-          }
-          
-          // Refresh classes
-          const classesResponse = await fetch(`${BACKEND_URL}/classes`, {
-            headers: withChurchHeader()
-          });
-          if (classesResponse.ok) {
-            const classesData = await classesResponse.json();
-            setClasses(classesData);
-          }
+          const createdTeacher = await response.json();
+          setTeachers(prev => [...prev, createdTeacher]);
+          setClasses(prev => prev.map(c => {
+            if (c.id === classId) {
+              return { 
+                ...c, 
+                teacherId: createdTeacher.id, 
+                language: language || c.language, 
+                churchId: currentUser?.churchId || CHURCH_ID 
+              };
+            }
+            return c;
+          }));
+          return;
         }
       } catch (err) {
-        console.error('Failed to add teacher:', err);
+        console.error('Failed to create teacher in database:', err);
       }
-    } else {
-      const newId = `t${Date.now()}`;
-      const newTeacher: User = {
-        id: newId,
-        name,
-        email,
-        password,
-        role: Role.TEACHER,
-        assignedClass: classId,
-        language: language,
-        is_first_login: true,
-        temp_password: password
-      };
-      setTeachers(prev => [...prev, newTeacher]);
-      setClasses(prev => prev.map(c => 
-        c.id === classId ? { ...c, teacherId: newId, language: language || c.language } : c
-      ));
     }
+
+    setTeachers(prev => [...prev, newTeacher]);
+    setClasses(prev => prev.map(c => {
+      if (c.id === classId) {
+        const isAdult = c.name.toLowerCase().includes('adult');
+        const baseName = c.name.split(' (')[0];
+        const newName = (isAdult && language) ? `${baseName} (${language})` : c.name;
+        return { 
+          ...c, 
+          name: newName,
+          teacherId: newId, 
+          language: language || c.language, 
+          churchId: currentUser?.id 
+        };
+      }
+      return c;
+    }));
   };
 
   const addClass = async (name: string, language: string) => {
+    const newId = `c${Date.now()}`;
     const newClass: Class = {
-      id: `c${Date.now()}`,
+      id: newId,
       name,
       teacherId: '',
-      language,
-      students: []
+      students: [],
+      language: language || 'English',
+      churchId: currentUser?.churchId || CHURCH_ID
     };
 
     if (isBackendConnected) {
@@ -703,38 +846,35 @@ const App: React.FC = () => {
         const response = await fetch(`${BACKEND_URL}/classes`, {
           method: 'POST',
           headers: withChurchHeader({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ ...newClass, churchId: CHURCH_ID })
+          body: JSON.stringify({ ...newClass, churchId: CHURCH_ID }),
         });
         if (response.ok) {
           const savedClass = await response.json();
-          const normalized = { ...savedClass, students: savedClass.students || [] };
-          setClasses(prev => [...prev, normalized]);
-          return normalized as Class;
+          setClasses(prev => [...prev, savedClass]);
+          return;
         }
       } catch (err) {
-        console.error('Failed to add class to database:', err);
+        console.error('Failed to save class to database:', err);
       }
     }
-
     setClasses(prev => [...prev, newClass]);
-    return newClass;
   };
 
-  const notifyTeachersNextSabbath = async (message: string, sabbathDate: string, recipients?: string[]) => {
+  const notifyTeachersNextSabbath = async (message: string, sabbathDate: string, recipients?: string[]): Promise<boolean> => {
     if (isBackendConnected) {
       try {
         const response = await fetch(`${BACKEND_URL}/notifications/next-sabbath`, {
           method: 'POST',
           headers: withChurchHeader({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ message, sabbathDate, recipients })
+          body: JSON.stringify({ message, sabbathDate, recipients }),
         });
         return response.ok;
       } catch (err) {
-        console.error('Failed to send next sabbath notice:', err);
+        console.error('Failed to send broadcast emails:', err);
         return false;
       }
     }
-    return false;
+    return true;
   };
 
   const updateTeacherPassword = async (teacherId: string, newPassword: string) => {
@@ -746,11 +886,12 @@ const App: React.FC = () => {
           body: JSON.stringify({ password: newPassword }),
         });
       } catch (err) {
-        console.error('Failed to update password in database:', err);
+        console.error('Failed to update password:', err);
       }
     }
-    
     setTeachers(prev => prev.map(t => t.id === teacherId ? { ...t, password: newPassword } : t));
+    setAdmins(prev => prev.map(a => a.id === teacherId ? { ...a, password: newPassword } : a));
+    
     if (currentUser?.id === teacherId) {
       const updated = { ...currentUser, password: newPassword } as User;
       setCurrentUser(updated);
@@ -761,33 +902,38 @@ const App: React.FC = () => {
   const removeTeacher = async (teacherId: string) => {
     if (isBackendConnected) {
       try {
-        await fetch(`${BACKEND_URL}/users/${teacherId}`, { method: 'DELETE', headers: withChurchHeader() });
+        await fetch(`${BACKEND_URL}/users/${teacherId}`, {
+          method: 'DELETE',
+          headers: withChurchHeader()
+        });
       } catch (err) {
-        console.error('Failed to remove teacher from database:', err);
+        console.error('Failed to delete teacher from database:', err);
       }
     }
-
     setTeachers(prev => prev.filter(t => t.id !== teacherId));
-    setClasses(prev => prev.map(c => (c.teacherId === teacherId ? { ...c, teacherId: '' } : c)));
+    setClasses(prev => prev.map(c => c.teacherId === teacherId ? { ...c, teacherId: '' } : c));
   };
 
   const assignTeacherToClass = async (teacherId: string, classId: string, language?: string) => {
     const targetClass = classes.find(c => c.id === classId);
-    if (!targetClass) return;
+    const nextLanguage = language || targetClass?.language || 'English';
 
-    const nextLanguage = language || targetClass.language;
-
-    // Optimistic local update
     setClasses(prev => prev.map(c => {
-      if (c.id === classId) {
-        return { ...c, teacherId, language: nextLanguage };
-      }
-      if (c.teacherId === teacherId && c.id !== classId) {
+      if (c.teacherId === teacherId) {
         return { ...c, teacherId: '' };
+      }
+      if (c.id === classId) {
+        return { ...c, teacherId: teacherId, language: nextLanguage };
       }
       return c;
     }));
-    setTeachers(prev => prev.map(t => t.id === teacherId ? { ...t, assignedClass: classId, language: nextLanguage } : t));
+
+    setTeachers(prev => prev.map(t => {
+      if (t.id === teacherId) {
+        return { ...t, assignedClass: classId, language: nextLanguage };
+      }
+      return t;
+    }));
 
     if (isBackendConnected) {
       try {
@@ -819,7 +965,7 @@ const App: React.FC = () => {
       phone: studentData.phone,
       address: studentData.address,
       age: studentData.age,
-      gender: studentData.gender as 'MALE' | 'FEMALE' | undefined,
+      gender: studentData.gender,
       baptized: studentData.baptized,
       member_since: studentData.member_since,
       emergency_contact: studentData.emergency_contact,
@@ -835,46 +981,36 @@ const App: React.FC = () => {
         });
         if (response.ok) {
           const savedStudent = await response.json();
-          // Update local classes with new student
           setClasses(prev => prev.map(c => {
             if (c.id === classId) {
               return { ...c, students: [...c.students, savedStudent] };
             }
             return c;
           }));
+          return;
         }
       } catch (err) {
         console.error('Failed to add student to database:', err);
-        // Fallback to local
-        setClasses(prev => prev.map(c => {
-          if (c.id === classId) {
-            return { ...c, students: [...c.students, newStudent] };
-          }
-          return c;
-        }));
       }
-    } else {
-      setClasses(prev => prev.map(c => {
-        if (c.id === classId) {
-          return { ...c, students: [...c.students, newStudent] };
-        }
-        return c;
-      }));
     }
+
+    setClasses(prev => prev.map(c => {
+      if (c.id === classId) {
+        return { ...c, students: [...c.students, newStudent] };
+      }
+      return c;
+    }));
   };
 
   const removeStudentFromClass = async (classId: string, studentId: string) => {
     if (isBackendConnected) {
       try {
-        const response = await fetch(`${BACKEND_URL}/students/${studentId}`, {
+        await fetch(`${BACKEND_URL}/students/${studentId}`, {
           method: 'DELETE',
           headers: withChurchHeader()
         });
-        if (!response.ok) {
-          throw new Error('Failed to delete student');
-        }
       } catch (err) {
-        console.error('Failed to remove student from database:', err);
+        console.error('Failed to delete student from database:', err);
       }
     }
 
@@ -954,7 +1090,6 @@ const App: React.FC = () => {
           const savedRecord = await response.json();
           setAttendanceRecords(prev => [savedRecord, ...prev]);
           
-          // Update students' attendance status in database
           await fetch(`${BACKEND_URL}/students/attendance`, {
             method: 'PUT',
             headers: withChurchHeader({ 'Content-Type': 'application/json' }),
@@ -964,7 +1099,6 @@ const App: React.FC = () => {
             }),
           });
           
-          // Refresh classes
           const classesResponse = await fetch(`${BACKEND_URL}/classes`, {
             headers: withChurchHeader()
           });
@@ -978,7 +1112,7 @@ const App: React.FC = () => {
         console.error('Failed to save attendance to database:', err);
       }
     }
-    
+
     setAttendanceRecords(prev => [record, ...prev]);
     setClasses(prev => prev.map(c => {
       if (c.id === record.classId) {
@@ -988,13 +1122,527 @@ const App: React.FC = () => {
     }));
   };
 
+  // -------------------------------------------------------------
+  // HANDLERS FOR NEW FEATURES & STAFF
+  // -------------------------------------------------------------
+  
+  // Super Admin
+  const handleAddConference = (newConf: Conference, newPres: User) => {
+    setConferences(prev => {
+      const exists = prev.some(c => c.id === newConf.id);
+      return exists ? prev.map(c => c.id === newConf.id ? newConf : c) : [...prev, newConf];
+    });
+    setConferencePresidents(prev => [...prev.filter(p => p.id !== newPres.id), newPres]);
+  };
+
+  // Church Admin (First Elder)
+  const handleAddOfficerByElder = (officerData: {
+    name: string;
+    email: string;
+    password: string;
+    role: Role;
+    phone?: string;
+    assignedClass?: string;
+    language?: string;
+    title?: string;
+    churchName?: string;
+  }) => {
+    const newId = `${officerData.role.toLowerCase()}-${Date.now()}`;
+    const newOfficer: User = {
+      id: newId,
+      name: officerData.name,
+      email: officerData.email,
+      password: officerData.password,
+      role: officerData.role,
+      phone: officerData.phone,
+      title: officerData.title,
+      churchId: currentUser?.churchId || activeChurchId,
+      churchName: officerData.churchName || currentUser?.churchName || 'Woodlands SDA Church',
+      assignedClass: officerData.assignedClass,
+      language: officerData.language,
+      status: 'active',
+      createdAt: new Date().toISOString()
+    };
+
+    if (officerData.role === Role.CLERK) {
+      setClerks(prev => [...prev, newOfficer]);
+      setAdmins(prev => [...prev, newOfficer]);
+    } else if (officerData.role === Role.SUPERINTENDENT) {
+      setSuperintendents(prev => [...prev, newOfficer]);
+    } else if (officerData.role === Role.TREASURER) {
+      setTreasurers(prev => [...prev, newOfficer]);
+    } else if (officerData.role === Role.TEACHER) {
+      setTeachers(prev => [...prev, newOfficer]);
+      if (officerData.assignedClass) {
+        setClasses(prev => prev.map(c => {
+          if (c.id === officerData.assignedClass) {
+            return {
+              ...c,
+              teacherId: newId,
+              language: officerData.language || c.language
+            };
+          }
+          return c;
+        }));
+      }
+    } else if (officerData.role === Role.CHURCH_ADMIN) {
+      setChurchAdmins(prev => [...prev, newOfficer]);
+      setAdmins(prev => [...prev, newOfficer]);
+    }
+  };
+
+  const handleUpdateOfficerByElder = (userId: string, updates: Partial<User>) => {
+    setClerks(prev => prev.map(u => u.id === userId ? { ...u, ...updates } : u));
+    setAdmins(prev => prev.map(u => u.id === userId ? { ...u, ...updates } : u));
+    setSuperintendents(prev => prev.map(u => u.id === userId ? { ...u, ...updates } : u));
+    setTreasurers(prev => prev.map(u => u.id === userId ? { ...u, ...updates } : u));
+    setTeachers(prev => prev.map(u => u.id === userId ? { ...u, ...updates } : u));
+    setChurchAdmins(prev => prev.map(u => u.id === userId ? { ...u, ...updates } : u));
+
+    if (currentUser?.id === userId) {
+      setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
+    }
+  };
+
+  const handleDeleteOfficerByElder = (userId: string) => {
+    setClerks(prev => prev.filter(u => u.id !== userId));
+    setAdmins(prev => prev.filter(u => u.id !== userId));
+    setSuperintendents(prev => prev.filter(u => u.id !== userId));
+    setTreasurers(prev => prev.filter(u => u.id !== userId));
+    setTeachers(prev => prev.filter(u => u.id !== userId));
+    setChurchAdmins(prev => prev.filter(u => u.id !== userId));
+  };
+
+  const updateTeacher = (teacherId: string, updates: Partial<User>) => {
+    setTeachers(prev => prev.map(t => t.id === teacherId ? { ...t, ...updates } : t));
+    if (updates.assignedClass || updates.language) {
+      setClasses(prev => prev.map(c => {
+        if (c.teacherId === teacherId) {
+          return { 
+            ...c, 
+            id: updates.assignedClass || c.id,
+            language: updates.language || c.language 
+          };
+        }
+        return c;
+      }));
+    }
+  };
+
+  // Clerk Extended Handlers (Members, Families, Transfers, Governance)
+  const addChurchMember = (member: Omit<ChurchMember, 'id' | 'churchId'>) => {
+    if (!currentUser) return;
+    const newMember: ChurchMember = {
+      ...member,
+      id: `m-${Date.now()}`,
+      churchId: currentUser.churchId || activeChurchId
+    };
+    setChurchMembers(prev => [...prev, newMember]);
+  };
+
+  const updateChurchMember = (memberId: string, updates: Partial<ChurchMember>) => {
+    setChurchMembers(prev => prev.map(m => m.id === memberId ? { ...m, ...updates } : m));
+  };
+
+  const deleteChurchMember = (memberId: string) => {
+    setChurchMembers(prev => prev.filter(m => m.id !== memberId));
+  };
+
+  const addFamilyUnit = (fam: Omit<FamilyUnit, 'id' | 'churchId'>) => {
+    if (!currentUser) return;
+    const newFam: FamilyUnit = {
+      ...fam,
+      id: `fam-${Date.now()}`,
+      churchId: currentUser.churchId || activeChurchId
+    };
+    setFamilyUnits(prev => [...prev, newFam]);
+  };
+
+  const updateFamilyUnit = (id: string, updates: Partial<FamilyUnit>) => {
+    setFamilyUnits(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
+  };
+
+  const deleteFamilyUnit = (id: string) => {
+    setFamilyUnits(prev => prev.filter(f => f.id !== id));
+  };
+
+  const addMeeting = (meeting: Omit<ChurchMeeting, 'id' | 'churchId'>) => {
+    if (!currentUser) return;
+    const newM: ChurchMeeting = {
+      ...meeting,
+      id: `meet-${Date.now()}`,
+      churchId: currentUser.churchId || activeChurchId
+    };
+    setMeetings(prev => [...prev, newM]);
+  };
+
+  const updateMeeting = (id: string, updates: Partial<ChurchMeeting>) => {
+    setMeetings(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
+  };
+
+  const deleteMeeting = (id: string) => {
+    setMeetings(prev => prev.filter(m => m.id !== id));
+  };
+
+  const addOfficer = (officer: Omit<ChurchOfficer, 'id' | 'churchId'>) => {
+    if (!currentUser) return;
+    const newO: ChurchOfficer = {
+      ...officer,
+      id: `off-${Date.now()}`,
+      churchId: currentUser.churchId || activeChurchId
+    };
+    setOfficers(prev => [...prev, newO]);
+  };
+
+  const updateOfficer = (id: string, updates: Partial<ChurchOfficer>) => {
+    setOfficers(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
+  };
+
+  const deleteOfficer = (id: string) => {
+    setOfficers(prev => prev.filter(o => o.id !== id));
+  };
+
+  const initiateTransfer = (studentId: string, studentName: string, toChurchId: string, toChurchName: string, reason?: string) => {
+    if (!currentUser) return;
+    
+    const newRequest: TransferRequest = {
+      id: `tr-${Date.now()}`,
+      studentId,
+      studentName,
+      fromChurchId: currentUser.id,
+      fromChurchName: currentUser.churchName || 'Unknown Church',
+      toChurchId,
+      toChurchName,
+      status: 'pending',
+      requestDate: new Date().toISOString(),
+      reason
+    };
+
+    setTransferRequests(prev => [...prev, newRequest]);
+    
+    // Mark student as transferring in their current class
+    setClasses(prev => prev.map(c => ({
+      ...c,
+      students: c.students.map(s => s.id === studentId ? { ...s, isTransferring: true } : s)
+    })));
+  };
+
+  const updateTransferStatus = (requestId: string, status: TransferRequest['status']) => {
+    setTransferRequests(prev => prev.map(r => r.id === requestId ? { ...r, status } : r));
+    
+    if (status === 'approved') {
+      const request = transferRequests.find(r => r.id === requestId);
+      if (request) {
+        let studentToMove: Student | null = null;
+        let oldClassId: string | null = null;
+
+        classes.forEach(c => {
+          const found = c.students.find(s => s.id === request.studentId);
+          if (found) {
+            studentToMove = found;
+            oldClassId = c.id;
+          }
+        });
+
+        if (studentToMove && oldClassId) {
+          setClasses(prev => prev.map(c => {
+            if (c.id === oldClassId) {
+              return { ...c, students: c.students.filter(s => s.id !== request.studentId) };
+            }
+            return c;
+          }));
+
+          const targetClerk = admins.find(a => a.id === request.toChurchId);
+          if (targetClerk) {
+            let targetClass = classes.find(c => c.churchId === request.toChurchId);
+            
+            if (!targetClass) {
+              const newClassId = `c-transferred-${request.toChurchId}`;
+              targetClass = {
+                id: newClassId,
+                name: 'Transferred Members',
+                teacherId: '',
+                students: [],
+                churchId: request.toChurchId
+              };
+              setClasses(prev => [...prev, targetClass!]);
+            }
+
+            const movedStudent: Student = {
+              ...(studentToMove as unknown as Student),
+              classId: targetClass.id,
+              isTransferring: false,
+              attendanceStatus: 'unmarked'
+            };
+            
+            setClasses(prev => prev.map(c => {
+              if (c.id === targetClass!.id) {
+                return { ...c, students: [...c.students, movedStudent] };
+              }
+              return c;
+            }));
+          }
+        }
+      }
+    }
+  };
+
+  const updateTransferStage = (requestId: string, status: TransferRequest['status'], extra?: Partial<TransferRequest>) => {
+    setTransferRequests(prev => prev.map(r => {
+      if (r.id === requestId) {
+        return { ...r, status, ...(extra || {}) };
+      }
+      return r;
+    }));
+
+    if (status === 'approved') {
+      updateTransferStatus(requestId, 'approved');
+    }
+  };
+
+  // Treasury Handlers
+  const handleAddBankAccount = (acc: Omit<ChurchBankAccount, 'id' | 'churchId'>) => {
+    const newAccount: ChurchBankAccount = {
+      ...acc,
+      id: `acc-${Date.now()}`,
+      churchId: currentUser?.churchId || activeChurchId,
+    };
+    setBankAccounts(prev => [newAccount, ...prev]);
+  };
+
+  const handleReconcileAccount = (id: string, date: string, statementBal: number) => {
+    setBankAccounts(prev => prev.map(a => a.id === id ? {
+      ...a,
+      lastReconciledDate: date,
+      currentBalance: statementBal
+    } : a));
+  };
+
+  const handleCompileRemittance = (remittance: Omit<ConferenceRemittance, 'id' | 'churchId'>) => {
+    const newRemit: ConferenceRemittance = {
+      ...remittance,
+      id: `remit-${Date.now()}`,
+      churchId: currentUser?.churchId || activeChurchId,
+    };
+    setRemittances(prev => [newRemit, ...prev]);
+  };
+
+  const handleAcknowledgeReceipt = (id: string, conferenceReceiptNo: string) => {
+    setRemittances(prev => prev.map(r => r.id === id ? {
+      ...r,
+      status: 'remitted_acknowledged',
+      conferenceReceiptNumber: conferenceReceiptNo
+    } : r));
+  };
+
+  const handleRecordSSTransmission = (data: Omit<SabbathSchoolTransmission, 'id' | 'churchId' | 'receiptNumber'>) => {
+    const newTrans: SabbathSchoolTransmission = {
+      ...data,
+      id: `ss-trans-${Date.now()}`,
+      churchId: currentUser?.churchId || activeChurchId,
+      receiptNumber: `SSR-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`
+    };
+    setSsTransmissions(prev => [newTrans, ...prev]);
+  };
+
+  const handleAddDisbursement = (disbursement: Omit<DisbursementRecord, 'id' | 'churchId' | 'voucherNumber'>) => {
+    const newDisb: DisbursementRecord = {
+      ...disbursement,
+      id: `disb-${Date.now()}`,
+      churchId: currentUser?.churchId || activeChurchId,
+      voucherNumber: `DIS-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`
+    };
+    setDisbursements(prev => [newDisb, ...prev]);
+    setBankAccounts(prev => prev.map(b => b.accountType === 'operating_checking' ? { ...b, currentBalance: b.currentBalance - disbursement.amount } : b));
+    if (disbursement.fundCategory === 'auxiliary') {
+      setAuxiliaryDepartments(prev => prev.map(d => d.name === disbursement.fundName ? {
+        ...d,
+        currentBalance: Math.max(0, d.currentBalance - disbursement.amount)
+      } : d));
+    }
+  };
+
+  const handleReceiveAuxiliaryFunds = (auxId: string, amount: number, _donorNote: string) => {
+    setAuxiliaryDepartments(prev => prev.map(a => a.id === auxId ? {
+      ...a,
+      currentBalance: a.currentBalance + amount
+    } : a));
+    setBankAccounts(prev => prev.map(b => b.accountType === 'operating_checking' ? { ...b, currentBalance: b.currentBalance + amount } : b));
+  };
+
+  const handleAddEnvelope = (envelope: Omit<OfferingEnvelope, 'id' | 'churchId' | 'receiptNumber'>) => {
+    const newEnvelope: OfferingEnvelope = {
+      ...envelope,
+      id: `env-${Date.now()}`,
+      churchId: currentUser?.churchId || activeChurchId,
+      receiptNumber: `REC-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`
+    };
+    setEnvelopes(prev => [newEnvelope, ...prev]);
+    setBankAccounts(prev => prev.map(b => b.accountType === 'operating_checking' ? { ...b, currentBalance: b.currentBalance + envelope.totalAmount } : b));
+  };
+
+  const handleAddLooseOffering = (loose: Omit<LooseOfferingRecord, 'id' | 'churchId' | 'receiptNumber'>) => {
+    const newLoose: LooseOfferingRecord = {
+      ...loose,
+      id: `loose-${Date.now()}`,
+      churchId: currentUser?.churchId || activeChurchId,
+      receiptNumber: `LCR-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`
+    };
+    setLooseOfferings(prev => [newLoose, ...prev]);
+    setBankAccounts(prev => prev.map(b => b.accountType === 'operating_checking' ? { ...b, currentBalance: b.currentBalance + loose.totalAmount } : b));
+  };
+
+  const handleAddLiteratureOrder = (order: Omit<LiteratureOrder, 'id' | 'churchId' | 'orderNumber'>) => {
+    const newOrder: LiteratureOrder = {
+      ...order,
+      id: `lit-${Date.now()}`,
+      churchId: currentUser?.churchId || activeChurchId,
+      orderNumber: `ABC-${new Date().getFullYear()}-${Date.now().toString().slice(-3)}`
+    };
+    setLiteratureOrders(prev => [newOrder, ...prev]);
+  };
+
+  const handleUpdateLiteratureStatus = (id: string, status: 'collected' | 'remitted_to_abc' | 'delivered', ref?: string) => {
+    setLiteratureOrders(prev => prev.map(l => l.id === id ? {
+      ...l,
+      status,
+      ...(ref ? { abcInvoiceRef: ref, remittedToAbcDate: new Date().toISOString().split('T')[0] } : {})
+    } : l));
+  };
+
+  const handleAddNewAudit = (audit: Omit<AuditRecord, 'id' | 'churchId'>) => {
+    const newAudit: AuditRecord = {
+      ...audit,
+      id: `audit-${Date.now()}`,
+      churchId: currentUser?.churchId || activeChurchId,
+    };
+    setAuditRecords(prev => [newAudit, ...prev]);
+  };
+
+  // Superintendent Handlers
+  const handleToggleMobilisationItem = (id: string) => {
+    setMobilisationPlan(prev => prev.map(m => {
+      if (m.id === id) {
+        const nextCompleted = !m.isCompleted;
+        return {
+          ...m,
+          isCompleted: nextCompleted,
+          completedDate: nextCompleted ? new Date().toISOString().split('T')[0] : undefined
+        };
+      }
+      return m;
+    }));
+  };
+
+  const handleAddMobilisationItem = (item: Omit<MobilisationPlanItem, 'id'>) => {
+    const newItem: MobilisationPlanItem = {
+      ...item,
+      id: `mob-${Date.now()}`
+    };
+    setMobilisationPlan(prev => [...prev, newItem]);
+  };
+
+  const handleUpdateCurriculum = (id: string, updates: Partial<SSCurriculumItem>) => {
+    setCurriculumInventory(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+  };
+
+  const handleUpdateRunSheet = (updated: SSProgramRunSheet) => {
+    setProgramRunSheet(updated);
+  };
+
+  const handleAddAuxiliaryOfficer = (officer: Omit<SSAuxiliaryOfficer, 'id'>) => {
+    const newOfficer: SSAuxiliaryOfficer = {
+      ...officer,
+      id: `aux-${Date.now()}`
+    };
+    setAuxiliaryOfficers(prev => [...prev, newOfficer]);
+  };
+
+  const handleUpdateTeacherCandidate = (id: string, updates: Partial<SSTeacherCandidate>) => {
+    setTeacherCandidates(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+  };
+
+  const handleAddTeacherCandidate = (candidate: Omit<SSTeacherCandidate, 'id'>) => {
+    const newCandidate: SSTeacherCandidate = {
+      ...candidate,
+      id: `tc-${Date.now()}`
+    };
+    setTeacherCandidates(prev => [...prev, newCandidate]);
+  };
+
+  const handleAddTeachersMeeting = (meeting: Omit<SSTeachersMeeting, 'id'>) => {
+    const newMeeting: SSTeachersMeeting = {
+      ...meeting,
+      id: `tm-${Date.now()}`
+    };
+    setTeachersMeetings(prev => [newMeeting, ...prev]);
+  };
+
+  const handleAddEvangelismProject = (project: Omit<SSEvangelismProject, 'id'>) => {
+    const newProj: SSEvangelismProject = {
+      ...project,
+      id: `evang-${Date.now()}`
+    };
+    setEvangelismProjects(prev => [...prev, newProj]);
+  };
+
+  const handleUpdateEvangelismProject = (id: string, updates: Partial<SSEvangelismProject>) => {
+    setEvangelismProjects(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  };
+
+  const handleAddGreetingSchedule = (item: Omit<SSGreetingSchedule, 'id'>) => {
+    const newGreet: SSGreetingSchedule = {
+      ...item,
+      id: `gs-${Date.now()}`
+    };
+    setGreetingSchedules(prev => [...prev, newGreet]);
+  };
+
+  const handleUpdateQuarterlyReport = (updated: Partial<SSQuarterlyReport>) => {
+    setQuarterlyReport(prev => ({ ...prev, ...updated }));
+  };
+
+  const handleAddStudyGuideOrder = (orderData: Omit<StudyGuideOrder, 'id' | 'churchId' | 'orderNumber'>) => {
+    const nextNum = (studyGuideOrders.length + 1).toString().padStart(3, '0');
+    const newOrder: StudyGuideOrder = {
+      ...orderData,
+      id: `sgo-${Date.now()}`,
+      churchId: currentUser?.churchId || activeChurchId,
+      orderNumber: `SGO-2026-${nextNum}`
+    };
+    setStudyGuideOrders(prev => [newOrder, ...prev]);
+  };
+
+  const handleUpdateStudyGuideOrder = (id: string, updates: Partial<StudyGuideOrder>) => {
+    setStudyGuideOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
+  };
+
+  const handleDeleteStudyGuideOrder = (id: string) => {
+    setStudyGuideOrders(prev => prev.filter(o => o.id !== id));
+  };
+
+  const mappedFinancialTransmissions: FinancialTransmission[] = ssTransmissions.map(st => ({
+    id: st.id,
+    transmissionRef: st.receiptNumber,
+    sabbathDate: st.date,
+    breakdown: {
+      worldMissionOffering: st.regularMissionOffering,
+      thirteenthSabbathOffering: st.thirteenthSabbathOffering,
+      birthdayThankOffering: st.birthdayThankOffering,
+      missionInvestment: st.missionInvestment,
+      sabbathSchoolExpense: st.sabbathSchoolExpense
+    },
+    totalAmount: st.totalMissionAmount,
+    signedBySecretary: st.secretaryName,
+    receivedByTreasurer: st.treasurerName,
+    status: st.status === 'remitted' ? 'remitted' : 'transmitted'
+  }));
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-blue-950 text-white">
-        <div className="bg-white p-6 rounded-3xl shadow-2xl mb-8 animate-pulse">
-          <SDALogo className="w-48 h-24" />
-        </div>
-        <div className="flex items-center gap-3">
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+        <SDALogo className="w-20 h-20 mb-8 animate-pulse" />
+        <div className="flex gap-2">
           <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
           <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
           <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -1008,20 +1656,30 @@ const App: React.FC = () => {
   const getTeacherClass = (): Class | null => {
     if (!currentUser || currentUser.role !== Role.TEACHER) return null;
     
-    // Try to find the exact assigned class
     const assignedClass = classes.find(c => c.id === currentUser.assignedClass);
     if (assignedClass) return assignedClass;
     
-    // If assigned class not found, find any class that has this user as teacherId
     const teacherIdClass = classes.find(c => c.teacherId === currentUser.id);
     if (teacherIdClass) return teacherIdClass;
 
-    // Return null if no class found
     return null;
   };
 
-  // Get teacher class with safe fallback
   const teacherClass = getTeacherClass();
+
+  const activeConference = useMemo(() => {
+    return conferences.find(c => 
+      c.id === currentUser?.conferenceId || 
+      (currentUser?.conferenceName && c.name.toLowerCase() === currentUser?.conferenceName?.toLowerCase())
+    ) || conferences[0] || INITIAL_CONFERENCES[0];
+  }, [conferences, currentUser]);
+
+  const activeDistrict = useMemo(() => {
+    return districts.find(d => 
+      d.id === currentUser?.districtId || 
+      (currentUser?.districtName && d.name.toLowerCase() === currentUser?.districtName?.toLowerCase())
+    ) || districts[0] || INITIAL_DISTRICTS[0];
+  }, [districts, currentUser]);
 
   const districtObj = currentUser && currentUser.role === Role.DISTRICT_ADMIN
     ? districts.find(d => d.id === currentUser.districtId) || {
@@ -1054,8 +1712,16 @@ const App: React.FC = () => {
               }
             }}
             onMarkNotificationRead={handleMarkNotificationRead}
+            onOpenPitchModal={() => setIsPitchModalOpen(true)}
           />
         )}
+        
+        {/* Executive Pitch Modal */}
+        <ClientPitchModal 
+          isOpen={isPitchModalOpen} 
+          onClose={() => setIsPitchModalOpen(false)} 
+        />
+
         <main className="flex-grow">
           <Routes>
             <Route path="/signup" element={!currentUser ? <SignupPage onSignup={handleSignup} /> : <Navigate to="/" />} />
@@ -1089,6 +1755,128 @@ const App: React.FC = () => {
               element={
                 !currentUser ? (
                   <Navigate to="/login" />
+                ) : currentUser.role === Role.SUPER_ADMIN ? (
+                  <SuperAdminDashboard
+                    user={currentUser}
+                    conferences={conferences.length > 0 ? conferences : INITIAL_CONFERENCES}
+                    districts={districts.length > 0 ? districts : INITIAL_DISTRICTS}
+                    churches={churches.length > 0 ? (churches as any) : INITIAL_CHURCHES}
+                    churchMembers={churchMembers}
+                    onAddConference={handleAddConference}
+                  />
+                ) : currentUser.role === Role.CHURCH_ADMIN ? (
+                  <ChurchAdminDashboard
+                    user={currentUser}
+                    clerks={clerks}
+                    superintendents={superintendents}
+                    treasurers={treasurers}
+                    teachers={teachers}
+                    classes={classes}
+                    churchMembers={churchMembers}
+                    familyUnits={familyUnits}
+                    transferRequests={transferRequests}
+                    meetings={meetings}
+                    officers={officers}
+                    attendanceRecords={attendanceRecords}
+                    onAddOfficer={handleAddOfficerByElder}
+                    onUpdateOfficer={handleUpdateOfficerByElder}
+                    onDeleteOfficer={handleDeleteOfficerByElder}
+                  />
+                ) : currentUser.role === Role.TREASURER ? (
+                  <TreasurerDashboard
+                    user={currentUser}
+                    churchMembers={churchMembers}
+                    bankAccounts={bankAccounts}
+                    onAddBankAccount={handleAddBankAccount}
+                    onReconcileAccount={handleReconcileAccount}
+                    remittances={remittances}
+                    onCompileRemittance={handleCompileRemittance}
+                    onAcknowledgeReceipt={handleAcknowledgeReceipt}
+                    ssTransmissions={ssTransmissions}
+                    onRecordSSTransmission={handleRecordSSTransmission}
+                    disbursements={disbursements}
+                    auxiliaryDepartments={auxiliaryDepartments}
+                    onAddDisbursement={handleAddDisbursement}
+                    onReceiveAuxiliaryFunds={handleReceiveAuxiliaryFunds}
+                    envelopes={envelopes}
+                    looseOfferings={looseOfferings}
+                    literatureOrders={literatureOrders}
+                    onAddEnvelope={handleAddEnvelope}
+                    onAddLooseOffering={handleAddLooseOffering}
+                    onAddLiteratureOrder={handleAddLiteratureOrder}
+                    onUpdateLiteratureStatus={handleUpdateLiteratureStatus}
+                    auditRecords={auditRecords}
+                    onAddNewAudit={handleAddNewAudit}
+                  />
+                ) : currentUser.role === Role.SUPERINTENDENT ? (
+                  <SuperintendentDashboard
+                    user={currentUser}
+                    mobilisationPlan={mobilisationPlan}
+                    onToggleMobilisationItem={handleToggleMobilisationItem}
+                    onAddMobilisationItem={handleAddMobilisationItem}
+                    conferenceEmphases={conferenceEmphases}
+                    curriculumInventory={curriculumInventory}
+                    onUpdateCurriculum={handleUpdateCurriculum}
+                    programRunSheet={programRunSheet}
+                    onUpdateRunSheet={handleUpdateRunSheet}
+                    councilMembers={councilMembers}
+                    auxiliaryOfficers={auxiliaryOfficers}
+                    onAddAuxiliaryOfficer={handleAddAuxiliaryOfficer}
+                    teacherCandidates={teacherCandidates}
+                    onUpdateTeacherCandidate={handleUpdateTeacherCandidate}
+                    onAddTeacherCandidate={handleAddTeacherCandidate}
+                    teachersMeetings={teachersMeetings}
+                    onAddTeachersMeeting={handleAddTeachersMeeting}
+                    evangelismProjects={evangelismProjects}
+                    onAddEvangelismProject={handleAddEvangelismProject}
+                    onUpdateEvangelismProject={handleUpdateEvangelismProject}
+                    greetingSchedules={greetingSchedules}
+                    onAddGreetingSchedule={handleAddGreetingSchedule}
+                    quarterlyReport={quarterlyReport}
+                    onUpdateQuarterlyReport={handleUpdateQuarterlyReport}
+                    churchMembers={churchMembers}
+                    financialTransmissions={mappedFinancialTransmissions}
+                    classSessions={classSessions}
+                    teachers={teachers}
+                    classes={classes}
+                    onAddTeacher={addTeacher}
+                    onUpdateTeacher={updateTeacher}
+                    onDeleteTeacher={removeTeacher}
+                    onUpdatePassword={updateTeacherPassword}
+                    studyGuideOrders={studyGuideOrders}
+                    onAddStudyGuideOrder={handleAddStudyGuideOrder}
+                    onUpdateStudyGuideOrder={handleUpdateStudyGuideOrder}
+                    onDeleteStudyGuideOrder={handleDeleteStudyGuideOrder}
+                  />
+                ) : currentUser.role === Role.CONFERENCE_PRESIDENT ? (
+                  <ConferencePresidentDashboard
+                    user={currentUser}
+                    conference={activeConference}
+                    districts={districts}
+                    churches={churches.length > 0 ? (churches as any) : INITIAL_CHURCHES}
+                    churchMembers={churchMembers}
+                    remittances={remittances}
+                    onAddDistrict={(newDist, pastorUser) => {
+                      setDistricts(prev => [...prev, newDist]);
+                      setDistrictPastors(prev => [...prev, pastorUser]);
+                    }}
+                    onNavigateToDistrict={(targetDistId) => {
+                      const targetDist = districts.find(d => d.id === targetDistId);
+                      if (targetDist) {
+                        const pastor = districtPastors.find(p => p.districtId === targetDistId) || {
+                          id: `pastor-${targetDist.id}`,
+                          name: targetDist.pastorName || 'District Pastor',
+                          email: targetDist.pastorEmail || 'pastor@district.org',
+                          role: Role.DISTRICT_PASTOR,
+                          districtId: targetDist.id,
+                          districtName: targetDist.name,
+                          conferenceId: targetDist.conferenceId,
+                          title: 'District Pastor (Pastoral Circuit Overseer)'
+                        } as User;
+                        setCurrentUser(pastor);
+                      }
+                    }}
+                  />
                 ) : currentUser.role === Role.CONFERENCE_ADMIN ? (
                   <ConferenceDashboard
                     user={currentUser}
@@ -1105,6 +1893,28 @@ const App: React.FC = () => {
                     onPublishAnnouncement={handlePublishAnnouncement}
                     onAdminUpdateUser={handleAdminUpdateUser}
                     onLogout={handleLogout}
+                  />
+                ) : currentUser.role === Role.DISTRICT_PASTOR ? (
+                  <DistrictPastorDashboard
+                    user={currentUser}
+                    district={activeDistrict}
+                    churches={churches.length > 0 ? (churches as any) : INITIAL_CHURCHES}
+                    churchMembers={churchMembers}
+                    attendanceRecords={attendanceRecords}
+                    onSelectChurchForPastoralCare={(targetId) => {
+                      setActiveChurchId(targetId);
+                      const targetChurch = (churches as any[]).find(c => c.id === targetId);
+                      const elder = churchAdmins.find(a => a.churchId === targetId) || {
+                        id: `elder-${targetId}`,
+                        name: targetChurch?.elderName || 'Presiding Elder',
+                        email: targetChurch?.elderEmail || 'elder@church.org',
+                        role: Role.CHURCH_ADMIN,
+                        churchId: targetId,
+                        churchName: targetChurch?.name || 'Local Church',
+                        title: 'Church Administrator & Presiding Elder'
+                      } as User;
+                      setCurrentUser(elder);
+                    }}
                   />
                 ) : currentUser.role === Role.DISTRICT_ADMIN ? (
                   districtObj ? (
@@ -1141,9 +1951,30 @@ const App: React.FC = () => {
                     resolveResetRequest={resolveResetRequest}
                     offerings={offerings}
                     onOfferingsChange={setOfferings}
+                    user={currentUser}
+                    admins={admins}
+                    churchMembers={churchMembers}
+                    familyUnits={familyUnits}
+                    transferRequests={transferRequests}
+                    meetings={meetings}
+                    officers={officers}
+                    onAddChurchMember={addChurchMember}
+                    onUpdateChurchMember={updateChurchMember}
+                    onDeleteChurchMember={deleteChurchMember}
+                    onAddFamilyUnit={addFamilyUnit}
+                    onUpdateFamilyUnit={updateFamilyUnit}
+                    onDeleteFamilyUnit={deleteFamilyUnit}
+                    onAddMeeting={addMeeting}
+                    onUpdateMeeting={updateMeeting}
+                    onDeleteMeeting={deleteMeeting}
+                    onAddOfficer={addOfficer}
+                    onUpdateOfficer={updateOfficer}
+                    onDeleteOfficer={deleteOfficer}
+                    onInitiateTransfer={initiateTransfer}
+                    onUpdateTransferStage={updateTransferStage}
                   />
                 ) : (
-                  // Only render TeacherDashboard if class exists
+                  // Teacher Dashboard
                   teacherClass ? (
                     <TeacherDashboard 
                       user={currentUser} 
